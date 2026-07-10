@@ -1,0 +1,5 @@
+# loop-agent runtime state (not durable memory; regenerated each run)
+.loop/logs/
+.loop/state.json
+.loop/REVIEW-PASS
+.loop/commit-msg.txt
