@@ -49,6 +49,21 @@ app.MapPost(
     }
 );
 
+app.MapPost(
+    "/create_match/",
+    async (CreateMatchRequest req, AppDbContext db) =>
+    {
+        var allowed = new[] { "kata", "combat" };
+        if (!allowed.Contains(req.Type, StringComparer.OrdinalIgnoreCase))
+            return Results.BadRequest(new { error = "invalid match type" });
+        var match = new Match { Type = req.Type.ToLowerInvariant(), EventId = req.EventId };
+        db.Matches.Add(match);
+        await db.SaveChangesAsync();
+        return Results.Ok(new { match_id = match.Id, type = match.Type });
+    }
+);
+
 app.Run();
 
 record CreateEventRequest(string Name);
+record CreateMatchRequest(string Type, int EventId);

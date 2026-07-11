@@ -1,5 +1,13 @@
 Plan generated. Awaiting build loop.
 
+## Iteration 7 — 2026-07-11
+
+**What:** Task 8 — Created `src/EventManager/Models/Match.cs` (Id, Type, EventId), added `DbSet<Match>` to `AppDbContext`, and added `POST /create_match/` in `Program.cs`. Whitelist check against `["kata","combat"]` (case-insensitive): invalid type → 400 + `{ "error": "invalid match type" }`; valid type → 200 + `{ "match_id": <int>, "type": "<type>" }`. Build clean, gate passes (turns AC11 and AC12 green).
+
+**Why:** AC11 requires POST /create_match/ returns 200 + match_id + type for valid types. AC12 requires 400 + "invalid match type" for non-whitelisted types.
+
+**Next iteration:** Task 9 — Wire `GET /match/` and `GET /match/{id}/` to SQLite: empty list when none, one-element list with `id` and `type` when present. Turns AC3 and AC4 green.
+
 ## Iteration 6 — 2026-07-11
 
 **What:** Task 7 — Added duplicate-name guard to `POST /create_event/` in `Program.cs`: calls `db.Events.AnyAsync(e => e.Name == req.Name)` before inserting; if true, returns `Results.Conflict` (HTTP 409) with JSON body `{ "error": "an event with the name \"<name>\" already exists" }`. Build clean, gate passes (turns AC10 green).
