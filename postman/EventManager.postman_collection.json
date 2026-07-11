@@ -1,0 +1,180 @@
+{
+  "info": {
+    "_postman_id": "event-manager-collection",
+    "name": "Event Manager",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Events",
+      "item": [
+        {
+          "name": "GET /event/",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/event/"
+          }
+        },
+        {
+          "name": "GET /event/{id}/",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/event/1/"
+          }
+        },
+        {
+          "name": "POST /create_event/",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/create_event/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Event 1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Matches",
+      "item": [
+        {
+          "name": "GET /match/",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/match/"
+          }
+        },
+        {
+          "name": "GET /match/{id}/",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/match/1/"
+          }
+        },
+        {
+          "name": "POST /create_match/",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/create_match/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"kata\",\n  \"event_id\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Competitors",
+      "item": [
+        {
+          "name": "GET /competitor/",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/competitor/"
+          }
+        },
+        {
+          "name": "GET /competitor/{id}/",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/competitor/1/"
+          }
+        },
+        {
+          "name": "POST /create_competitor/",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/create_competitor/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test comp 1\",\n  \"styles\": [\"karate\", \"BJJ\"],\n  \"birthdate\": \"09-01-2000\",\n  \"last_weigh_in\": {\n    \"weight\": 160.4,\n    \"units\": \"lbs\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Brackets",
+      "item": [
+        {
+          "name": "GET /bracket/",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/bracket/"
+          }
+        },
+        {
+          "name": "GET /bracket/{id}/",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/bracket/1/"
+          }
+        },
+        {
+          "name": "POST /generate_bracket/",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/generate_bracket/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event_id\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

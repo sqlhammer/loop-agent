@@ -1,5 +1,13 @@
 Plan generated. Awaiting build loop.
 
+## Iteration 11 — 2026-07-11
+
+**What:** Task 14 — Created `postman/EventManager.postman_collection.json` (Postman collection v2.1) with all 12 requests organized in four folders (Events, Matches, Competitors, Brackets): GET /event/, GET /event/1/, POST /create_event/, GET /match/, GET /match/1/, POST /create_match/, GET /competitor/, GET /competitor/1/, POST /create_competitor/, GET /bracket/, GET /bracket/1/, POST /generate_bracket/. All requests use `{{baseUrl}}` variable (default `http://localhost:8080`).
+
+**Why:** AC requirement for a Postman collection covering every endpoint. This is the last feature task before the final green-pass verification.
+
+**Next iteration:** Task 15 — Run `dotnet format`, confirm `verify.ps1 -Accept` exits 0 with all 14 acceptance criteria passing. If any test fails, fix the product code (do not touch acceptance tests).
+
 ## Iteration 10 — 2026-07-11
 
 **What:** Tasks 12 and 13 — Created `Models/Bracket.cs` (Id, EventId, GroupingsJson), added `Brackets` DbSet to `AppDbContext`. Added `POST /generate_bracket/` (reads event's matches + all competitors, round-robins competitors across matches, persists Bracket, returns `bracket_id`, `event_id`, `matches`). Added `GET /bracket/` (returns empty list on fresh DB, turns AC5 green) and `GET /bracket/{id}/` (returns one-element array with `id`, `event_id`, `matches` groupings from JSON, turns AC6 green). Also turns AC14 green. Build clean, lint clean, gate passes.
