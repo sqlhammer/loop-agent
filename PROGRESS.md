@@ -1,5 +1,29 @@
 Plan generated. Awaiting build loop.
 
+## Independent Review — 2026-07-11
+
+Adversarial review by a fresh-context reviewer who did not write the code.
+
+**Verdict: Reviewer approved.**
+
+Checked for reward hacking, gaps, and regressions:
+- **No test tampering:** `verify.ps1` (all `Test-Ac*`, `Run-AcceptanceTests`,
+  `Invoke-Test`), `tests/acceptance/README.md`, and `GOAL.md` are unchanged since the
+  start commit `1f3df86`. Confirmed via `git diff --name-only`.
+- **No vacuous/hardcoded values:** response data is computed from real EF Core SQLite
+  queries and inserts; IDs come from real autoincrement. The suite drives a real
+  containerized server over HTTP against a freshly-wiped SQLite volume.
+- **All 14 ACs backed by genuine behavior**, including real per-match competitor
+  groupings in bracket generation (not a stub). Durability via named Docker volume,
+  port 8080, snake_case JSON, and 409/`already exists` + 400/`invalid match type`
+  error contracts all verified in code.
+- **GOAL's Postman-collection requirement** (not asserted by verify.ps1) is genuinely
+  satisfied: all 12 endpoints present with correct request bodies.
+- **Independently re-ran `verify.ps1 -Accept -ShowTests`:** built the container fresh,
+  14/14 criteria PASS, exit code 0. Build warning-clean, lint clean.
+
+Reviewer approved.
+
 ## Iteration 12 — 2026-07-11
 
 **What:** Task 15 — Fixed Dockerfile: removed `--no-restore` from `dotnet publish` command (was causing NETSDK1064 error for `Microsoft.EntityFrameworkCore.Analyzers` inside Docker). Ran `dotnet format --verify-no-changes` (clean). Ran `verify.ps1 -Accept`: all 14 acceptance criteria PASS (AC1–AC14). Exit 0.
