@@ -32,6 +32,10 @@ $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 . ".loop/lib.ps1"
 
+# Load .env (CLAUDE_CODE_OAUTH_TOKEN, etc.) before anything touches 'claude'.
+$envLoaded = Import-DotEnv ".env"
+if ($envLoaded -gt 0) { Write-Host "loaded $envLoaded var(s) from .env" -ForegroundColor DarkGray }
+
 # Any hard agent failure (auth error, crash, bad invocation, ...) halts loudly here
 # instead of silently committing empty "progress" and lying about state.
 function Stop-OnAgentFailure {
@@ -41,8 +45,9 @@ function Stop-OnAgentFailure {
   Write-Host " AGENT INVOCATION FAILED during: $Phase" -ForegroundColor Red
   Write-Host " $ErrMessage" -ForegroundColor Red
   Write-Host " No commit made, no state change. Nothing was silently skipped." -ForegroundColor Red
-  Write-Host " Common cause: 'claude' isn't authenticated in this shell/process." -ForegroundColor Yellow
-  Write-Host "   -> run 'claude' interactively here and confirm you're logged in," -ForegroundColor Yellow
+  Write-Host " Common cause: headless 'claude -p' isn't authenticated (interactive login is separate)." -ForegroundColor Yellow
+  Write-Host "   -> run 'claude setup-token' in your own terminal, then put the result in:" -ForegroundColor Yellow
+  Write-Host "        $PSScriptRoot\.env   as   CLAUDE_CODE_OAUTH_TOKEN=<token>" -ForegroundColor Yellow
   $resumeFlag = if ($Phase -match '^(build iteration|reviewer pass)') { ' -Approve' } else { '' }
   Write-Host "      then re-run: pwsh -File run-loop.ps1$resumeFlag" -ForegroundColor Yellow
   Write-Host " Full log is under .loop/logs/." -ForegroundColor Yellow

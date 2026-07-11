@@ -5,8 +5,16 @@ through subscription usage limits. This guide is only how to **use** it. To star
 
 ## 1. Prerequisites (once)
 
-- `claude` (Claude Code CLI) on PATH and signed in.
+- `claude` (Claude Code CLI) on PATH and signed in (`claude` interactively should show your plan).
 - PowerShell 7+ (`pwsh`) and `git`.
+- **Headless auth token.** The loop runs `claude` non-interactively, which needs its own
+  token even if interactive `claude` already works. Once:
+  ```powershell
+  claude setup-token                 # run in your own terminal, follow its prompts
+  copy .env.example .env
+  # edit .env: CLAUDE_CODE_OAUTH_TOKEN=<the token setup-token gave you>
+  ```
+  `.env` is gitignored — never commit it.
 - **Run inside a sandbox / container / VM / disposable copy.** The loop runs unattended
   with permissions skipped, so don't point it at anything you can't afford it to change.
 

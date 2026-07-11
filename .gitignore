@@ -3,3 +3,6 @@
 .loop/state.json
 .loop/REVIEW-PASS
 .loop/commit-msg.txt
+
+# sensitive information
+.env

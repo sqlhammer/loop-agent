@@ -4,6 +4,35 @@
 $ErrorActionPreference = "Stop"
 
 # ---------------------------------------------------------------------------
+# .env loading  — CLAUDE_CODE_OAUTH_TOKEN (and any other project secrets) live in
+# a gitignored .env file in the project root, KEY=value per line. Loaded once into
+# the current process's environment so every child process (claude, verify.ps1)
+# inherits it automatically. Never logs values. Existing env vars are NOT
+# overwritten (a real shell export always wins over .env).
+# ---------------------------------------------------------------------------
+function Import-DotEnv {
+  param([string]$Path = ".env")
+  if (-not (Test-Path $Path)) { return 0 }
+  $count = 0
+  foreach ($line in Get-Content $Path) {
+    $t = $line.Trim()
+    if ($t -eq '' -or $t.StartsWith('#')) { continue }
+    if ($t -notmatch '^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$') { continue }
+    $key = $Matches[1]
+    $val = $Matches[2].Trim()
+    if (($val.StartsWith('"') -and $val.EndsWith('"')) -or ($val.StartsWith("'") -and $val.EndsWith("'"))) {
+      $val = $val.Substring(1, $val.Length - 2)
+    }
+    $existing = [Environment]::GetEnvironmentVariable($key)
+    if ([string]::IsNullOrEmpty($existing)) {
+      Set-Item -Path "Env:$key" -Value $val
+      $count++
+    }
+  }
+  return $count
+}
+
+# ---------------------------------------------------------------------------
 # State  (.loop/state.json)  — the loop's durable phase/counters across processes
 # ---------------------------------------------------------------------------
 function Get-LoopState {
