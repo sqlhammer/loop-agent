@@ -22,6 +22,17 @@ using (var scope = app.Services.CreateScope())
 app.MapGet("/event/", async (AppDbContext db) =>
     Results.Ok(await db.Events.ToListAsync()));
 
+app.MapGet(
+    "/event/{id}/",
+    async (int id, AppDbContext db) =>
+    {
+        var ev = await db.Events.FindAsync(id);
+        if (ev is null)
+            return Results.NotFound();
+        return Results.Ok(new[] { ev });
+    }
+);
+
 app.MapPost(
     "/create_event/",
     async (CreateEventRequest req, AppDbContext db) =>

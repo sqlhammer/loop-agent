@@ -1,5 +1,13 @@
 Plan generated. Awaiting build loop.
 
+## Iteration 5 — 2026-07-11
+
+**What:** Task 6 — Added `GET /event/{id}/` endpoint to `Program.cs` that queries `db.Events.FindAsync(id)` and returns a one-element array (or 404 if not found). `GET /event/` was already DB-backed from Task 5. Build clean, lint clean, gate passes.
+
+**Why:** AC2 requires `GET /event/1/` to return 200 + a one-element list with `id` and `name` fields. AC1 was already passing via the existing `GET /event/` endpoint.
+
+**Next iteration:** Task 7 — Enforce unique event name in `POST /create_event/`: check if an event with the same name already exists; if so, return HTTP 409 with a body containing `an event with the name "<name>" already exists` (turns AC10 green).
+
 ## Iteration 4 — 2026-07-11
 
 **What:** Task 5 — Created `src/EventManager/Models/Event.cs` (Id, Name properties), added `DbSet<Event>` to `AppDbContext`, replaced the hardcoded empty-array `GET /event/` with a real DB query, and added `POST /create_event/` that persists a new Event and returns `{ "event_id": <int> }`. Added `CreateEventRequest` record DTO. Build clean, lint clean, gate passes.
