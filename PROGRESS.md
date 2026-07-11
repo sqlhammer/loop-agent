@@ -1,5 +1,13 @@
 Plan generated. Awaiting build loop.
 
+## Iteration 2 — 2026-07-11
+
+**What:** Added `Dockerfile` (multi-stage: sdk:10.0 build → aspnet:10.0 runtime, port 8080, ENTRYPOINT dotnet EventManager.dll) and root `docker-compose.yml` (publishes 8080:8080, named volume `db-data` mounted at `/data`, ConnectionStrings__Default env var pointing to `/data/eventmanager.db`). Docker image builds successfully via `docker compose build`.
+
+**Why:** verify.ps1's `Start-Server` / `Find-ComposeFile` needs a docker-compose.yml at the repo root to bring the containerized server up. Without it, all acceptance tests fail immediately.
+
+**Next iteration:** Task 4 — Add EF Core + SQLite persistence: install Microsoft.EntityFrameworkCore.Sqlite NuGet package, create AppDbContext, wire up connection string from env var, and call EnsureCreated on startup. Also configure snake_case JSON serialization. The ConnectionStrings__Default env var is already being passed by docker-compose.yml.
+
 ## Iteration 1 — 2026-07-11
 
 **What:** Installed .NET 10 SDK (10.0.301) via winget (was missing from system), then scaffolded the solution: `EventManager.sln`, `src/EventManager/EventManager.csproj` (ASP.NET Core Minimal API targeting net10.0), `src/EventManager/Program.cs` (includes `GET /event/` returning empty JSON array), and `src/EventManager/appsettings.json` (sets `Urls: http://+:8080`). Both `dotnet build` and `dotnet format --verify-no-changes` pass. Marked Task 1 and Task 2 complete since the minimal scaffold already includes the /event/ endpoint.
