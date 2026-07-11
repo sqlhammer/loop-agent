@@ -6,7 +6,7 @@
 - [x] Task 4: Add EF Core + SQLite persistence — `AppDbContext`, connection string to a SQLite file stored on a named Docker volume, and schema creation on startup (EnsureCreated/migrations) against a fresh empty DB. Configure snake_case JSON serialization.
 - [x] Task 5: Implement the Event entity and `POST /create_event/` returning the new event id, backed by SQLite (turns AC9 green).
 - [x] Task 6: Wire `GET /event/` and `GET /event/{id}/` to SQLite — empty list when none, one-element list with `id` and `name` when present (turns AC1 and AC2 green).
-- [ ] Task 7: Enforce unique event name in `POST /create_event/` — duplicate name returns HTTP 409 with a body containing `an event with the name "<name>" already exists` (turns AC10 green).
+- [x] Task 7: Enforce unique event name in `POST /create_event/` — duplicate name returns HTTP 409 with a body containing `an event with the name "<name>" already exists` (turns AC10 green).
 - [ ] Task 8: Implement the Match entity and `POST /create_match/` with the `kata`/`combat` whitelist — valid type returns 200 + match id and type; non-whitelisted type returns HTTP 400 with body `invalid match type` (turns AC11 and AC12 green).
 - [ ] Task 9: Wire `GET /match/` and `GET /match/{id}/` to SQLite — empty list when none, one-element list with `id` and `type` when present (turns AC3 and AC4 green).
 - [ ] Task 10: Implement the Competitor entity and `POST /create_competitor/` accepting `{ name, styles[], birthdate, last_weigh_in{weight,units} }`, returning the competitor data plus new id (turns AC13 green).

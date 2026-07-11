@@ -1,5 +1,13 @@
 Plan generated. Awaiting build loop.
 
+## Iteration 6 — 2026-07-11
+
+**What:** Task 7 — Added duplicate-name guard to `POST /create_event/` in `Program.cs`: calls `db.Events.AnyAsync(e => e.Name == req.Name)` before inserting; if true, returns `Results.Conflict` (HTTP 409) with JSON body `{ "error": "an event with the name \"<name>\" already exists" }`. Build clean, gate passes (turns AC10 green).
+
+**Why:** AC10 requires that a second `POST /create_event/` with the same event name returns 409 with a body containing `already exists`.
+
+**Next iteration:** Task 8 — Implement Match entity and `POST /create_match/` with `kata`/`combat` whitelist (valid type → 200 + match id and type; invalid type → 400 + `invalid match type`). Turns AC11 and AC12 green.
+
 ## Iteration 5 — 2026-07-11
 
 **What:** Task 6 — Added `GET /event/{id}/` endpoint to `Program.cs` that queries `db.Events.FindAsync(id)` and returns a one-element array (or 404 if not found). `GET /event/` was already DB-backed from Task 5. Build clean, lint clean, gate passes.

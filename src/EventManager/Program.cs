@@ -37,6 +37,11 @@ app.MapPost(
     "/create_event/",
     async (CreateEventRequest req, AppDbContext db) =>
     {
+        var exists = await db.Events.AnyAsync(e => e.Name == req.Name);
+        if (exists)
+            return Results.Conflict(
+                new { error = $"an event with the name \"{req.Name}\" already exists" }
+            );
         var ev = new Event { Name = req.Name };
         db.Events.Add(ev);
         await db.SaveChangesAsync();
