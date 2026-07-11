@@ -1,5 +1,13 @@
 Plan generated. Awaiting build loop.
 
+## Iteration 12 — 2026-07-11
+
+**What:** Task 15 — Fixed Dockerfile: removed `--no-restore` from `dotnet publish` command (was causing NETSDK1064 error for `Microsoft.EntityFrameworkCore.Analyzers` inside Docker). Ran `dotnet format --verify-no-changes` (clean). Ran `verify.ps1 -Accept`: all 14 acceptance criteria PASS (AC1–AC14). Exit 0.
+
+**Why:** The `--no-restore` flag caused the Docker publish step to fail because the NuGet restore cache inside the image didn't expose the analyzer package properly during publish. Removing the flag lets `dotnet publish` run its own restore, resolving the issue.
+
+**Next iteration:** All tasks complete. verify.ps1 -Accept exits 0. Goal is done.
+
 ## Iteration 11 — 2026-07-11
 
 **What:** Task 14 — Created `postman/EventManager.postman_collection.json` (Postman collection v2.1) with all 12 requests organized in four folders (Events, Matches, Competitors, Brackets): GET /event/, GET /event/1/, POST /create_event/, GET /match/, GET /match/1/, POST /create_match/, GET /competitor/, GET /competitor/1/, POST /create_competitor/, GET /bracket/, GET /bracket/1/, POST /generate_bracket/. All requests use `{{baseUrl}}` variable (default `http://localhost:8080`).

@@ -4,7 +4,7 @@ COPY EventManager.sln ./
 COPY src/EventManager/EventManager.csproj src/EventManager/
 RUN dotnet restore
 COPY . .
-RUN dotnet publish src/EventManager/EventManager.csproj -c Release -o /app/publish --no-restore
+RUN dotnet publish src/EventManager/EventManager.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
