@@ -4,7 +4,7 @@
 - [x] Task 2: Add `GET /event/` returning an empty JSON array from an in-memory list, so `dotnet build` passes and the endpoint responds (foundation for AC1).
 - [x] Task 3: Add a `Dockerfile` and a root `docker-compose.yml` that build the project and publish `8080:8080`, so `verify.ps1`'s `Start-Server` can bring the container up and reach `GET /event/`.
 - [x] Task 4: Add EF Core + SQLite persistence — `AppDbContext`, connection string to a SQLite file stored on a named Docker volume, and schema creation on startup (EnsureCreated/migrations) against a fresh empty DB. Configure snake_case JSON serialization.
-- [ ] Task 5: Implement the Event entity and `POST /create_event/` returning the new event id, backed by SQLite (turns AC9 green).
+- [x] Task 5: Implement the Event entity and `POST /create_event/` returning the new event id, backed by SQLite (turns AC9 green).
 - [ ] Task 6: Wire `GET /event/` and `GET /event/{id}/` to SQLite — empty list when none, one-element list with `id` and `name` when present (turns AC1 and AC2 green).
 - [ ] Task 7: Enforce unique event name in `POST /create_event/` — duplicate name returns HTTP 409 with a body containing `an event with the name "<name>" already exists` (turns AC10 green).
 - [ ] Task 8: Implement the Match entity and `POST /create_match/` with the `kata`/`combat` whitelist — valid type returns 200 + match id and type; non-whitelisted type returns HTTP 400 with body `invalid match type` (turns AC11 and AC12 green).

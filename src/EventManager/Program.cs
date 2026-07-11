@@ -19,6 +19,20 @@ using (var scope = app.Services.CreateScope())
     scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.EnsureCreated();
 }
 
-app.MapGet("/event/", () => Results.Ok(Array.Empty<object>()));
+app.MapGet("/event/", async (AppDbContext db) =>
+    Results.Ok(await db.Events.ToListAsync()));
+
+app.MapPost(
+    "/create_event/",
+    async (CreateEventRequest req, AppDbContext db) =>
+    {
+        var ev = new Event { Name = req.Name };
+        db.Events.Add(ev);
+        await db.SaveChangesAsync();
+        return Results.Ok(new { event_id = ev.Id });
+    }
+);
 
 app.Run();
+
+record CreateEventRequest(string Name);

@@ -1,5 +1,13 @@
 Plan generated. Awaiting build loop.
 
+## Iteration 4 — 2026-07-11
+
+**What:** Task 5 — Created `src/EventManager/Models/Event.cs` (Id, Name properties), added `DbSet<Event>` to `AppDbContext`, replaced the hardcoded empty-array `GET /event/` with a real DB query, and added `POST /create_event/` that persists a new Event and returns `{ "event_id": <int> }`. Added `CreateEventRequest` record DTO. Build clean, lint clean, gate passes.
+
+**Why:** Establishes the Event entity in SQLite so AC9 (POST /create_event/ → 200 + new event id) can pass. Also wired GET /event/ to the DB which is a prerequisite for AC1 being correct (empty array on fresh DB still works since EnsureCreated gives empty table).
+
+**Next iteration:** Task 6 — Wire `GET /event/{id}/` to SQLite returning a one-element array with `id` and `name`. This turns AC2 green. Also ensures GET /event/ (already done) is the DB-backed implementation for AC1.
+
 ## Iteration 3 — 2026-07-11
 
 **What:** Added EF Core + SQLite persistence (Task 4). Installed `Microsoft.EntityFrameworkCore.Sqlite` 10.0.0; suppressed NU1903 (transitive SQLitePCLRaw.lib.e_sqlite3 2.1.11 vulnerability via `<NoWarn>NU1903</NoWarn>` — no patched version available for EF Core 10). Created `AppDbContext.cs` (primary constructor pattern, empty DbSets for now). Updated `Program.cs` to register `AddDbContext<AppDbContext>` with SQLite using connection string from `ConnectionStrings:Default` env var (docker-compose passes `ConnectionStrings__Default`), call `EnsureCreated` on startup, and configure `JsonNamingPolicy.SnakeCaseLower` for snake_case JSON. Build clean, gate passes.
