@@ -1,5 +1,13 @@
 Plan generated. Awaiting build loop.
 
+## Iteration 10 — 2026-07-11
+
+**What:** Tasks 12 and 13 — Created `Models/Bracket.cs` (Id, EventId, GroupingsJson), added `Brackets` DbSet to `AppDbContext`. Added `POST /generate_bracket/` (reads event's matches + all competitors, round-robins competitors across matches, persists Bracket, returns `bracket_id`, `event_id`, `matches`). Added `GET /bracket/` (returns empty list on fresh DB, turns AC5 green) and `GET /bracket/{id}/` (returns one-element array with `id`, `event_id`, `matches` groupings from JSON, turns AC6 green). Also turns AC14 green. Build clean, lint clean, gate passes.
+
+**Why:** AC14 requires POST /generate_bracket/ to return 200 + bracket_id. AC5 requires GET /bracket/ empty on fresh DB. AC6 requires GET /bracket/1/ with `id` and `matches`/`groupings` property after bracket generation.
+
+**Next iteration:** Task 14 — Add the Postman collection (`postman/EventManager.postman_collection.json`) with requests for all endpoints. Then Task 15 (final green pass of verify.ps1 -Accept).
+
 ## Iteration 9 — 2026-07-11
 
 **What:** Task 10 — Added `Competitor` entity (`Models/Competitor.cs`) with fields `Id`, `Name`, `StylesJson` (JSON-serialized string array), `Birthdate`, `LastWeighInWeight`, `LastWeighInUnits`. Added `Competitors` DbSet to `AppDbContext`. Added `GET /competitor/`, `GET /competitor/{id}/`, and `POST /create_competitor/` to `Program.cs`. POST response returns `competitor_id`, `name`, `styles`, `birthdate`, `last_weigh_in`. GET /competitor/{id}/ returns a one-element array with `id`, `name`, `styles`, `birthdate`, `last_weigh_in`. Build clean, lint clean (turns AC13, AC7, AC8 green).

@@ -11,7 +11,7 @@
 - [x] Task 9: Wire `GET /match/` and `GET /match/{id}/` to SQLite — empty list when none, one-element list with `id` and `type` when present (turns AC3 and AC4 green).
 - [x] Task 10: Implement the Competitor entity and `POST /create_competitor/` accepting `{ name, styles[], birthdate, last_weigh_in{weight,units} }`, returning the competitor data plus new id (turns AC13 green).
 - [x] Task 11: Wire `GET /competitor/` and `GET /competitor/{id}/` to SQLite — empty list when none, one-element list exposing `id, name, styles, birthdate, last_weigh_in` when present (turns AC7 and AC8 green).
-- [ ] Task 12: Implement the Bracket entity plus `POST /generate_bracket/` — read an event's matches and competitors, assign competitors into matches to form per-match groupings, persist, and return the bracket data + new bracket id (turns AC14 green).
-- [ ] Task 13: Wire `GET /bracket/` and `GET /bracket/{id}/` to SQLite — empty list when none, one-element list with `id` plus a `matches`/`groupings` property describing competitors per match (turns AC5 and AC6 green).
+- [x] Task 12: Implement the Bracket entity plus `POST /generate_bracket/` — read an event's matches and competitors, assign competitors into matches to form per-match groupings, persist, and return the bracket data + new bracket id (turns AC14 green).
+- [x] Task 13: Wire `GET /bracket/` and `GET /bracket/{id}/` to SQLite — empty list when none, one-element list with `id` plus a `matches`/`groupings` property describing competitors per match (turns AC5 and AC6 green).
 - [ ] Task 14: Add the Postman collection (`postman/EventManager.postman_collection.json`) with a request for every endpoint (the four GETs, single-id GETs, and four POSTs) using `{{baseUrl}}`.
 - [ ] Task 15: Final green pass — run `dotnet format`, confirm `verify.ps1 -Accept` exits 0 with all acceptance criteria passing, and update `PROGRESS.md` (turns AC16 green).

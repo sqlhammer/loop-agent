@@ -124,7 +124,70 @@ app.MapPost(
     }
 );
 
+app.MapGet(
+    "/bracket/",
+    async (AppDbContext db) =>
+    {
+        var list = await db.Brackets.ToListAsync();
+        return Results.Ok(list.Select(ToBracketDto));
+    }
+);
+
+app.MapGet(
+    "/bracket/{id}/",
+    async (int id, AppDbContext db) =>
+    {
+        var bracket = await db.Brackets.FindAsync(id);
+        if (bracket is null)
+            return Results.NotFound();
+        return Results.Ok(new[] { ToBracketDto(bracket) });
+    }
+);
+
+app.MapPost(
+    "/generate_bracket/",
+    async (GenerateBracketRequest req, AppDbContext db) =>
+    {
+        var matches = await db.Matches.Where(m => m.EventId == req.EventId).ToListAsync();
+        var competitors = await db.Competitors.ToListAsync();
+
+        var groupings = new List<object>();
+        for (int i = 0; i < matches.Count; i++)
+        {
+            var assigned = competitors
+                .Where((_, idx) => idx % matches.Count == i)
+                .Select(c => c.Id)
+                .ToList();
+            groupings.Add(new { match_id = matches[i].Id, competitors = assigned });
+        }
+
+        var bracket = new Bracket
+        {
+            EventId = req.EventId,
+            GroupingsJson = JsonSerializer.Serialize(groupings),
+        };
+        db.Brackets.Add(bracket);
+        await db.SaveChangesAsync();
+
+        return Results.Ok(
+            new
+            {
+                bracket_id = bracket.Id,
+                event_id = bracket.EventId,
+                matches = groupings,
+            }
+        );
+    }
+);
+
 app.Run();
+
+static object ToBracketDto(Bracket b)
+{
+    var groupings =
+        JsonSerializer.Deserialize<JsonElement>(b.GroupingsJson);
+    return new { id = b.Id, event_id = b.EventId, matches = groupings };
+}
 
 static object ToCompetitorDto(Competitor c) =>
     new
@@ -139,6 +202,7 @@ static object ToCompetitorDto(Competitor c) =>
 
 record CreateEventRequest(string Name);
 record CreateMatchRequest(string Type, int EventId);
+record GenerateBracketRequest(int EventId);
 record WeighInRequest(double Weight, string Units);
 record CreateCompetitorRequest(
     string Name,

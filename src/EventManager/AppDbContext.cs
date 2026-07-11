@@ -7,4 +7,5 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Event> Events => Set<Event>();
     public DbSet<Match> Matches => Set<Match>();
     public DbSet<Competitor> Competitors => Set<Competitor>();
+    public DbSet<Bracket> Brackets => Set<Bracket>();
 }
