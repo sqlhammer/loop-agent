@@ -8,5 +8,5 @@
 .env
 
 # build and debug artifacts
-/src/bin/
-/src/obj/
+bin/
+obj/
