@@ -6,3 +6,7 @@
 
 # sensitive information
 .env
+
+# build and debug artifacts
+/src/bin/
+/src/obj/
