@@ -36,8 +36,9 @@ All paths use a trailing slash (ASP.NET Core routing matches trailing slashes by
 Collection GETs return a JSON **array**; single-id GETs return a **one-element array**
 (the verifier wraps a bare object into a one-element list, so returning the object alone
 also passes — a one-element array is preferred for fidelity to the GOAL wording).
-Business-rule violations return HTTP **500** with an error message in the body (the GOAL
-specifies 500 for duplicate-event and invalid-match-type; we honor that literally).
+Business-rule violations return a conventional 4xx status with an error message in the
+body: duplicate-event returns **409 Conflict**, invalid-match-type returns **400 Bad
+Request**.
 
 | Method + path            | Behavior                                                                                 |
 |--------------------------|------------------------------------------------------------------------------------------|
@@ -49,8 +50,8 @@ specifies 500 for duplicate-event and invalid-match-type; we honor that literall
 | `GET /bracket/{id}/`     | One-element list containing the bracket, incl. competitor groupings per match.           |
 | `GET /competitor/`       | All competitors (empty `[]` when none).                                                  |
 | `GET /competitor/{id}/`  | One-element list containing the competitor with all fields.                              |
-| `POST /create_event/`    | Create event; returns new event id. Duplicate name → 500 `... already exists`.           |
-| `POST /create_match/`    | Create match; returns match id + type. Type not in whitelist → 500 `invalid match type`. |
+| `POST /create_event/`    | Create event; returns new event id. Duplicate name → 409 `... already exists`.           |
+| `POST /create_match/`    | Create match; returns match id + type. Type not in whitelist → 400 `invalid match type`. |
 | `POST /create_competitor/` | Create competitor; returns competitor data + new id.                                   |
 | `POST /generate_bracket/`  | Generate a bracket for an event's matches/competitors; returns bracket data + new id.  |
 
@@ -71,7 +72,7 @@ specifies 500 for duplicate-event and invalid-match-type; we honor that literall
 ## Match-type whitelist
 
 The allowed match types are configured as a whitelist: `kata`, `combat`. `create_match`
-rejects anything else with 500 `invalid match type`.
+rejects anything else with 400 `invalid match type`.
 
 ## Bracket generation
 

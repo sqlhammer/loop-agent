@@ -42,9 +42,9 @@ Each `GOAL.md` acceptance criterion maps to a function in `verify.ps1`:
 | 7  | `Test-Ac7`  | `GET /competitor/` on empty DB → 200 + empty list |
 | 8  | `Test-Ac8`  | `GET /competitor/1/` → 200 + one competitor with all fields (`id`, `name`, `styles`, `birthdate`, `last_weigh_in`) |
 | 9  | `Test-Ac9`  | `POST /create_event/` → 200 + new event id |
-| 10 | `Test-Ac10` | `POST /create_event/` duplicate name → 500 + body contains `already exists` |
+| 10 | `Test-Ac10` | `POST /create_event/` duplicate name → 409 + body contains `already exists` |
 | 11 | `Test-Ac11` | `POST /create_match/` → 200 + match id and type (`kata`) |
-| 12 | `Test-Ac12` | `POST /create_match/` type `BJJ` → 500 + body contains `invalid match type` |
+| 12 | `Test-Ac12` | `POST /create_match/` type `BJJ` → 400 + body contains `invalid match type` |
 | 13 | `Test-Ac13` | `POST /create_competitor/` → 200 + competitor data + new id (`Test comp 1`) |
 | 14 | `Test-Ac14` | `POST /generate_bracket/` (event 1 + 3 matches + 8 competitors) → 200 + bracket data + new id |
 | 16 | (exit code) | `verify.ps1 -Accept` exits 0 = build + lint + full acceptance suite all green |

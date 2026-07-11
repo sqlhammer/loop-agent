@@ -17,3 +17,7 @@ The test command
 ```
 pwsh -File verify.ps1 -Accept -ShowTests
 ```
+
+
+
+Turns out. I should not have updated the verify myself, it would have written AC for me to review in the Plan phase

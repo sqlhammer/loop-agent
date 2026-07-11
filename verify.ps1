@@ -229,10 +229,10 @@ function Test-Ac2 {   # GIVEN event id 1 exists, GET /event/1/ -> 200 + one even
     "status=$($r.Status) count=$((AsArray $r.Json).Count)"
 }
 
-function Test-Ac10 {  # POST /create_event/ with a duplicate name -> 500 + "already exists"
+function Test-Ac10 {  # POST /create_event/ with a duplicate name -> 409 + "already exists"
   $r = Invoke-Api POST '/create_event/' @{ name = 'Test Event 1' }
-  Check 'AC10' 'POST /create_event/ duplicate name -> 500 + "already exists"' `
-    ($r.Status -eq 500 -and $r.Raw -match 'already exists') "status=$($r.Status) body=$($r.Raw)"
+  Check 'AC10' 'POST /create_event/ duplicate name -> 409 + "already exists"' `
+    ($r.Status -eq 409 -and $r.Raw -match 'already exists') "status=$($r.Status) body=$($r.Raw)"
 }
 
 function Test-Ac11 {  # POST /create_match/ -> 200 + match id and match type (creates match 1)
@@ -250,10 +250,10 @@ function Test-Ac4 {   # GIVEN match id 1 exists, GET /match/1/ -> 200 + one matc
     "status=$($r.Status) count=$((AsArray $r.Json).Count)"
 }
 
-function Test-Ac12 {  # POST /create_match/ with a non-whitelisted type -> 500 + "invalid match type"
+function Test-Ac12 {  # POST /create_match/ with a non-whitelisted type -> 400 + "invalid match type"
   $r = Invoke-Api POST '/create_match/' @{ type = 'BJJ'; event_id = 1 }
-  Check 'AC12' 'POST /create_match/ type=BJJ -> 500 + "invalid match type"' `
-    ($r.Status -eq 500 -and $r.Raw -match 'invalid match type') "status=$($r.Status) body=$($r.Raw)"
+  Check 'AC12' 'POST /create_match/ type=BJJ -> 400 + "invalid match type"' `
+    ($r.Status -eq 400 -and $r.Raw -match 'invalid match type') "status=$($r.Status) body=$($r.Raw)"
 }
 
 function Test-Ac13 {  # POST /create_competitor/ -> 200 + competitor data + new id (creates competitor 1)

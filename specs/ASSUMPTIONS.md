@@ -34,9 +34,9 @@ AC→function mapping, and pins the invariant that it must never be weakened. Bu
 - **Response shape for single-id GETs.** The GOAL says "a list with one X in it," and the
   verifier wraps a bare object into a one-element list. We return a **one-element array**
   from `GET /{entity}/{id}/`.
-- **Error status code is 500.** The GOAL explicitly asks for HTTP 500 on duplicate event
-  name (crit 10) and invalid match type (crit 12). We return 500 for those business-rule
-  violations even though 4xx would be more conventional — the tests assert 500.
+- **Error status codes.** Duplicate event name (crit 10) returns HTTP **409 Conflict**;
+  invalid match type (crit 12) returns HTTP **400 Bad Request** — the conventional REST
+  mapping for a resource conflict vs. a bad client input, respectively.
 - **Error body format.** Duplicate event returns a body containing the substring
   `already exists` (verifier matches `already exists`); the fuller message is
   `an event with the name "<name>" already exists`. Invalid match type returns a body

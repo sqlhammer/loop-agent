@@ -27,8 +27,8 @@ file with project-specific conventions.
   `verify.ps1`'s `Find-ComposeFile`/`Start-Server` can bring the stack up. The verifier
   wipes the DB volume each run (`down -v`); ensure schema is (re)created on startup.
 - **JSON is snake_case** (`event_id`, `last_weigh_in`, `birthdate`, ...). Error responses
-  for duplicate event and invalid match type must return HTTP **500** with the exact
-  substrings `already exists` and `invalid match type` respectively.
+  must return HTTP **409** for duplicate event and HTTP **400** for invalid match type,
+  with the exact substrings `already exists` and `invalid match type` respectively.
 - **Response shapes:** collection GETs return a JSON array; single-id GETs return a
   one-element array. First row of each entity against a fresh DB must have id `1`.
 - See `specs/OVERVIEW.md` and `specs/ASSUMPTIONS.md` for the full contract.
