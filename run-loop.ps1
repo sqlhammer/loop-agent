@@ -17,6 +17,7 @@ param(
   [switch]$Approve,
   [switch]$Replan,
   [switch]$Status,
+  [switch]$NoPreflight,
   [int]$MaxIterations     = 300,
   [int]$StallLimit        = 8,
   [int]$ResetBufferSeconds = 120,
@@ -31,12 +32,41 @@ $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 . ".loop/lib.ps1"
 
+# Any hard agent failure (auth error, crash, bad invocation, ...) halts loudly here
+# instead of silently committing empty "progress" and lying about state.
+function Stop-OnAgentFailure {
+  param([string]$Phase, [string]$ErrMessage)
+  Write-Host ""
+  Write-Host "==================================================" -ForegroundColor Red
+  Write-Host " AGENT INVOCATION FAILED during: $Phase" -ForegroundColor Red
+  Write-Host " $ErrMessage" -ForegroundColor Red
+  Write-Host " No commit made, no state change. Nothing was silently skipped." -ForegroundColor Red
+  Write-Host " Common cause: 'claude' isn't authenticated in this shell/process." -ForegroundColor Yellow
+  Write-Host "   -> run 'claude' interactively here and confirm you're logged in," -ForegroundColor Yellow
+  $resumeFlag = if ($Phase -match '^(build iteration|reviewer pass)') { ' -Approve' } else { '' }
+  Write-Host "      then re-run: pwsh -File run-loop.ps1$resumeFlag" -ForegroundColor Yellow
+  Write-Host " Full log is under .loop/logs/." -ForegroundColor Yellow
+  Write-Host "==================================================" -ForegroundColor Red
+  exit 4
+}
+
 # --- guards ---------------------------------------------------------------
 if (-not (Test-Path "GOAL.md"))   { Write-Host "GOAL.md not found. Fill it in first." -ForegroundColor Red; exit 1 }
 if (-not (Test-Path "verify.ps1")){ Write-Host "verify.ps1 not found." -ForegroundColor Red; exit 1 }
 git rev-parse --is-inside-work-tree *> $null
 if ($LASTEXITCODE -ne 0) { Write-Host "Not a git repo. Run 'git init' first." -ForegroundColor Red; exit 1 }
 Ensure-GitBaseline
+
+if (-not $NoPreflight -and -not $Status) {
+  Write-Host "preflight: checking 'claude' is authenticated..." -ForegroundColor DarkGray
+  try {
+    Invoke-Agent -PromptText "Reply with exactly: OK" -Label "preflight" -Model $Model `
+                 -ClaudeArgs $ClaudeArgs -BufferSeconds $ResetBufferSeconds | Out-Null
+  } catch {
+    Stop-OnAgentFailure -Phase "preflight" -ErrMessage $_.Exception.Message
+  }
+  Write-Host "preflight: OK" -ForegroundColor DarkGray
+}
 
 $state = Get-LoopState
 if ($Status)  { $state | Format-List; exit 0 }
@@ -53,8 +83,17 @@ $common = @{ ClaudeArgs = $ClaudeArgs; BufferSeconds = $ResetBufferSeconds }
 # =====================================================================
 if ($state.phase -eq "plan") {
   Write-Host "=== PLAN PHASE ===" -ForegroundColor Cyan
-  Invoke-Agent -PromptFile ".loop/prompt.plan.md" -Label "plan" -Model $ReviewModel @common | Out-Null
-  git add -A *> $null; git commit -q -m "plan: specs, implementation plan, acceptance tests" --allow-empty *> $null
+  try {
+    Invoke-Agent -PromptFile ".loop/prompt.plan.md" -Label "plan" -Model $ReviewModel @common | Out-Null
+  } catch {
+    Stop-OnAgentFailure -Phase "plan" -ErrMessage $_.Exception.Message
+  }
+  if (-not [bool](git status --porcelain)) {
+    Write-Host "Plan agent exited cleanly but wrote NO files — refusing to commit or advance." -ForegroundColor Red
+    Write-Host "Check .loop/logs/plan-*.log for what happened." -ForegroundColor Red
+    exit 4
+  }
+  git add -A *> $null; git commit -q -m "plan: specs, implementation plan, acceptance tests"
   $state.phase = "await_approval"; Set-LoopState $state
   Write-Host ""
   Write-Host "PLAN COMPLETE — one-time human review needed." -ForegroundColor Green
@@ -94,7 +133,11 @@ while ($state.iteration -lt $MaxIterations) {
   # 1) One fresh-context agent does ONE task. It edits files + updates memory,
   #    but does NOT commit — the supervisor owns commit/revert deterministically.
   Remove-Item -ErrorAction SilentlyContinue .loop/commit-msg.txt
-  Invoke-Agent -PromptFile ".loop/prompt.iteration.md" -Label "iter$($state.iteration)" -Model $Model @common | Out-Null
+  try {
+    Invoke-Agent -PromptFile ".loop/prompt.iteration.md" -Label "iter$($state.iteration)" -Model $Model @common | Out-Null
+  } catch {
+    Stop-OnAgentFailure -Phase "build iteration $($state.iteration)" -ErrMessage $_.Exception.Message
+  }
 
   # 2) Deterministic commit gate. Commit only real changes (no empty commits) so that
   #    "no file changes" is a reliable stall signal. Record build/lint health in the
@@ -130,7 +173,11 @@ while ($state.iteration -lt $MaxIterations) {
   if (-not (Test-OpenTasks) -and (Invoke-Verify -Target Accept)) {
     Write-Host "  candidate DONE — running independent reviewer pass..." -ForegroundColor Cyan
     Remove-Item -ErrorAction SilentlyContinue .loop/REVIEW-PASS
-    Invoke-Agent -PromptFile ".loop/prompt.review.md" -Label "review$($state.iteration)" -Model $ReviewModel @common | Out-Null
+    try {
+      Invoke-Agent -PromptFile ".loop/prompt.review.md" -Label "review$($state.iteration)" -Model $ReviewModel @common | Out-Null
+    } catch {
+      Stop-OnAgentFailure -Phase "reviewer pass (after iteration $($state.iteration))" -ErrMessage $_.Exception.Message
+    }
     if ([bool](git status --porcelain)) { git add -A *> $null; git commit -q -m "review after iter $($state.iteration)" *> $null }
 
     if ((Test-Path ".loop/REVIEW-PASS") -and -not (Test-OpenTasks) -and (Invoke-Verify -Target Accept)) {

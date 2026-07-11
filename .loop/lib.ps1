@@ -63,14 +63,16 @@ function Get-ResetDelaySeconds([string]$text, [int]$BufferSeconds = 120) {
 # ---------------------------------------------------------------------------
 function Invoke-Agent {
   param(
-    [Parameter(Mandatory)][string]$PromptFile,
+    [string]$PromptFile,
+    [string]$PromptText,       # use instead of -PromptFile for a short inline prompt (e.g. preflight)
     [Parameter(Mandatory)][string]$Label,
     [string]$Model,
     [string[]]$ClaudeArgs,
     [int]$BufferSeconds = 120,
     [int]$FallbackWaitSeconds = 1800
   )
-  $prompt = Get-Content $PromptFile -Raw
+  if (-not $PromptText -and -not $PromptFile) { throw "Invoke-Agent: supply -PromptFile or -PromptText" }
+  $prompt = if ($PromptText) { $PromptText } else { Get-Content $PromptFile -Raw }
   $ts = (Get-Date -Format "yyyyMMdd-HHmmss")
   $log = ".loop/logs/$Label-$ts.log"
 
@@ -80,9 +82,23 @@ function Invoke-Agent {
 
     Write-Host "  -> agent [$Label] model=$Model" -ForegroundColor DarkGray
     $out = (& claude @args 2>&1 | Tee-Object -FilePath $log | Out-String)
+    $exitCode = $LASTEXITCODE
 
     $delay = Get-ResetDelaySeconds $out $BufferSeconds
-    if ($null -eq $delay) { return $out }   # normal completion
+    if ($null -eq $delay) {
+      # Not a usage-limit message. A non-zero exit is a HARD FAILURE (auth error,
+      # crash, bad invocation, etc.) — never silently treat it as a successful
+      # completion. Surface it loudly so the supervisor stops instead of committing
+      # empty "progress" and lying about state.
+      if ($exitCode -ne 0) {
+        Write-Host "  !! agent [$Label] FAILED (exit $exitCode)" -ForegroundColor Red
+        Write-Host "  ---- output ----" -ForegroundColor Red
+        Write-Host $out.Trim()
+        Write-Host "  ---- (full log: $log) ----" -ForegroundColor Red
+        throw "Agent invocation failed for '$Label' (exit $exitCode). See $log"
+      }
+      return $out   # normal completion
+    }
 
     if ($delay -lt 0) { $delay = $FallbackWaitSeconds }  # limit hit, time unknown -> fallback
     $wake = (Get-Date).AddSeconds($delay)
@@ -96,6 +112,11 @@ function Invoke-Agent {
     if ($null -ne $stillLimited) {
       Write-Host "  .. still limited after wait; will wait again." -ForegroundColor Yellow
       continue   # window not actually open yet; loop re-sleeps
+    }
+    if ($LASTEXITCODE -ne 0) {
+      Write-Host "  !! re-probe failed for a non-limit reason (exit $LASTEXITCODE):" -ForegroundColor Red
+      Write-Host $probe.Trim()
+      throw "Agent invocation failed for '$Label' after usage-limit wait (probe exit $LASTEXITCODE)."
     }
     Write-Host "  .. window reopened; retrying [$Label]." -ForegroundColor Green
     # loop around and re-run the real prompt
