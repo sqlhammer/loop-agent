@@ -1,7 +1,7 @@
 # Implementation Plan
 
-- [ ] Task 1: Scaffold the solution and Web API project — create `EventManager.sln` and an ASP.NET Core (.NET 10) Minimal API project (e.g. `src/EventManager/EventManager.csproj`) that builds clean with `dotnet build` and `dotnet format --verify-no-changes`, and starts a Kestrel server listening on port 8080.
-- [ ] Task 2: Add `GET /event/` returning an empty JSON array from an in-memory list, so `dotnet build` passes and the endpoint responds (foundation for AC1).
+- [x] Task 1: Scaffold the solution and Web API project — create `EventManager.sln` and an ASP.NET Core (.NET 10) Minimal API project (e.g. `src/EventManager/EventManager.csproj`) that builds clean with `dotnet build` and `dotnet format --verify-no-changes`, and starts a Kestrel server listening on port 8080.
+- [x] Task 2: Add `GET /event/` returning an empty JSON array from an in-memory list, so `dotnet build` passes and the endpoint responds (foundation for AC1).
 - [ ] Task 3: Add a `Dockerfile` and a root `docker-compose.yml` that build the project and publish `8080:8080`, so `verify.ps1`'s `Start-Server` can bring the container up and reach `GET /event/`.
 - [ ] Task 4: Add EF Core + SQLite persistence — `AppDbContext`, connection string to a SQLite file stored on a named Docker volume, and schema creation on startup (EnsureCreated/migrations) against a fresh empty DB. Configure snake_case JSON serialization.
 - [ ] Task 5: Implement the Event entity and `POST /create_event/` returning the new event id, backed by SQLite (turns AC9 green).
