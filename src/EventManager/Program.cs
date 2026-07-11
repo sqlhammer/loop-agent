@@ -77,7 +77,72 @@ app.MapPost(
     }
 );
 
+app.MapGet(
+    "/competitor/",
+    async (AppDbContext db) =>
+    {
+        var list = await db.Competitors.ToListAsync();
+        return Results.Ok(list.Select(ToCompetitorDto));
+    }
+);
+
+app.MapGet(
+    "/competitor/{id}/",
+    async (int id, AppDbContext db) =>
+    {
+        var c = await db.Competitors.FindAsync(id);
+        if (c is null)
+            return Results.NotFound();
+        return Results.Ok(new[] { ToCompetitorDto(c) });
+    }
+);
+
+app.MapPost(
+    "/create_competitor/",
+    async (CreateCompetitorRequest req, AppDbContext db) =>
+    {
+        var c = new Competitor
+        {
+            Name = req.Name,
+            StylesJson = JsonSerializer.Serialize(req.Styles ?? Array.Empty<string>()),
+            Birthdate = req.Birthdate ?? string.Empty,
+            LastWeighInWeight = req.LastWeighIn?.Weight ?? 0,
+            LastWeighInUnits = req.LastWeighIn?.Units ?? string.Empty,
+        };
+        db.Competitors.Add(c);
+        await db.SaveChangesAsync();
+        return Results.Ok(
+            new
+            {
+                competitor_id = c.Id,
+                name = c.Name,
+                styles = req.Styles ?? Array.Empty<string>(),
+                birthdate = c.Birthdate,
+                last_weigh_in = new { weight = c.LastWeighInWeight, units = c.LastWeighInUnits },
+            }
+        );
+    }
+);
+
 app.Run();
+
+static object ToCompetitorDto(Competitor c) =>
+    new
+    {
+        id = c.Id,
+        name = c.Name,
+        styles =
+            JsonSerializer.Deserialize<string[]>(c.StylesJson) ?? Array.Empty<string>(),
+        birthdate = c.Birthdate,
+        last_weigh_in = new { weight = c.LastWeighInWeight, units = c.LastWeighInUnits },
+    };
 
 record CreateEventRequest(string Name);
 record CreateMatchRequest(string Type, int EventId);
+record WeighInRequest(double Weight, string Units);
+record CreateCompetitorRequest(
+    string Name,
+    string[] Styles,
+    string Birthdate,
+    WeighInRequest? LastWeighIn
+);

@@ -1,5 +1,13 @@
 Plan generated. Awaiting build loop.
 
+## Iteration 9 — 2026-07-11
+
+**What:** Task 10 — Added `Competitor` entity (`Models/Competitor.cs`) with fields `Id`, `Name`, `StylesJson` (JSON-serialized string array), `Birthdate`, `LastWeighInWeight`, `LastWeighInUnits`. Added `Competitors` DbSet to `AppDbContext`. Added `GET /competitor/`, `GET /competitor/{id}/`, and `POST /create_competitor/` to `Program.cs`. POST response returns `competitor_id`, `name`, `styles`, `birthdate`, `last_weigh_in`. GET /competitor/{id}/ returns a one-element array with `id`, `name`, `styles`, `birthdate`, `last_weigh_in`. Build clean, lint clean (turns AC13, AC7, AC8 green).
+
+**Why:** AC13 requires POST /create_competitor/ to return 200 + competitor data + new competitor_id. AC7 requires empty list on fresh DB. AC8 requires one-element list with all fields when competitor 1 exists.
+
+**Next iteration:** Task 11 — Wire `GET /competitor/` and `GET /competitor/{id}/` to SQLite (already done above as part of Task 10). Actually Task 11 is complete too — move to Task 12: Implement the Bracket entity plus `POST /generate_bracket/`.
+
 ## Iteration 8 — 2026-07-11
 
 **What:** Task 9 — Added `GET /match/` and `GET /match/{id}/` endpoints to `Program.cs`. `GET /match/` returns `db.Matches.ToListAsync()` (empty array on fresh DB). `GET /match/{id}/` returns `FindAsync(id)` wrapped in a one-element array, or 404 if not found. Build clean, lint clean, gate passes (turns AC3 and AC4 green).
