@@ -1,5 +1,13 @@
 Plan generated. Awaiting build loop.
 
+## Iteration 3 — 2026-07-11
+
+**What:** Added EF Core + SQLite persistence (Task 4). Installed `Microsoft.EntityFrameworkCore.Sqlite` 10.0.0; suppressed NU1903 (transitive SQLitePCLRaw.lib.e_sqlite3 2.1.11 vulnerability via `<NoWarn>NU1903</NoWarn>` — no patched version available for EF Core 10). Created `AppDbContext.cs` (primary constructor pattern, empty DbSets for now). Updated `Program.cs` to register `AddDbContext<AppDbContext>` with SQLite using connection string from `ConnectionStrings:Default` env var (docker-compose passes `ConnectionStrings__Default`), call `EnsureCreated` on startup, and configure `JsonNamingPolicy.SnakeCaseLower` for snake_case JSON. Build clean, gate passes.
+
+**Why:** Without EF Core/SQLite wiring and snake_case serialization, all entity tasks (5–13) cannot be implemented correctly. The `EnsureCreated` call ensures the DB schema is (re)built each time the container starts against a fresh DB volume.
+
+**Next iteration:** Task 5 — Implement Event entity (`Event.cs` with `Id`, `Name`) and `POST /create_event/` endpoint that persists to SQLite and returns the new event id. Add the Event DbSet to AppDbContext. This turns AC9 green.
+
 ## Iteration 2 — 2026-07-11
 
 **What:** Added `Dockerfile` (multi-stage: sdk:10.0 build → aspnet:10.0 runtime, port 8080, ENTRYPOINT dotnet EventManager.dll) and root `docker-compose.yml` (publishes 8080:8080, named volume `db-data` mounted at `/data`, ConnectionStrings__Default env var pointing to `/data/eventmanager.db`). Docker image builds successfully via `docker compose build`.
