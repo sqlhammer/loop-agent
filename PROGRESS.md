@@ -1,5 +1,13 @@
 Plan generated. Awaiting build loop.
 
+## Iteration 8 — 2026-07-11
+
+**What:** Task 9 — Added `GET /match/` and `GET /match/{id}/` endpoints to `Program.cs`. `GET /match/` returns `db.Matches.ToListAsync()` (empty array on fresh DB). `GET /match/{id}/` returns `FindAsync(id)` wrapped in a one-element array, or 404 if not found. Build clean, lint clean, gate passes (turns AC3 and AC4 green).
+
+**Why:** AC3 requires GET /match/ to return 200 + empty list on fresh DB. AC4 requires GET /match/1/ to return 200 + one-element list with `id` and `type` fields when a match exists.
+
+**Next iteration:** Task 10 — Implement the Competitor entity and `POST /create_competitor/` accepting `{ name, styles[], birthdate, last_weigh_in{weight,units} }`, returning the competitor data plus new id (turns AC13 green).
+
 ## Iteration 7 — 2026-07-11
 
 **What:** Task 8 — Created `src/EventManager/Models/Match.cs` (Id, Type, EventId), added `DbSet<Match>` to `AppDbContext`, and added `POST /create_match/` in `Program.cs`. Whitelist check against `["kata","combat"]` (case-insensitive): invalid type → 400 + `{ "error": "invalid match type" }`; valid type → 200 + `{ "match_id": <int>, "type": "<type>" }`. Build clean, gate passes (turns AC11 and AC12 green).

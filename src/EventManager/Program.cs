@@ -49,6 +49,20 @@ app.MapPost(
     }
 );
 
+app.MapGet("/match/", async (AppDbContext db) =>
+    Results.Ok(await db.Matches.ToListAsync()));
+
+app.MapGet(
+    "/match/{id}/",
+    async (int id, AppDbContext db) =>
+    {
+        var match = await db.Matches.FindAsync(id);
+        if (match is null)
+            return Results.NotFound();
+        return Results.Ok(new[] { match });
+    }
+);
+
 app.MapPost(
     "/create_match/",
     async (CreateMatchRequest req, AppDbContext db) =>

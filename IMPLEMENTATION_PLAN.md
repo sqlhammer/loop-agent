@@ -8,7 +8,7 @@
 - [x] Task 6: Wire `GET /event/` and `GET /event/{id}/` to SQLite — empty list when none, one-element list with `id` and `name` when present (turns AC1 and AC2 green).
 - [x] Task 7: Enforce unique event name in `POST /create_event/` — duplicate name returns HTTP 409 with a body containing `an event with the name "<name>" already exists` (turns AC10 green).
 - [x] Task 8: Implement the Match entity and `POST /create_match/` with the `kata`/`combat` whitelist — valid type returns 200 + match id and type; non-whitelisted type returns HTTP 400 with body `invalid match type` (turns AC11 and AC12 green).
-- [ ] Task 9: Wire `GET /match/` and `GET /match/{id}/` to SQLite — empty list when none, one-element list with `id` and `type` when present (turns AC3 and AC4 green).
+- [x] Task 9: Wire `GET /match/` and `GET /match/{id}/` to SQLite — empty list when none, one-element list with `id` and `type` when present (turns AC3 and AC4 green).
 - [ ] Task 10: Implement the Competitor entity and `POST /create_competitor/` accepting `{ name, styles[], birthdate, last_weigh_in{weight,units} }`, returning the competitor data plus new id (turns AC13 green).
 - [ ] Task 11: Wire `GET /competitor/` and `GET /competitor/{id}/` to SQLite — empty list when none, one-element list exposing `id, name, styles, birthdate, last_weigh_in` when present (turns AC7 and AC8 green).
 - [ ] Task 12: Implement the Bracket entity plus `POST /generate_bracket/` — read an event's matches and competitors, assign competitors into matches to form per-match groupings, persist, and return the bracket data + new bracket id (turns AC14 green).
