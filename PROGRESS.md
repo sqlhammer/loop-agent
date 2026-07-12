@@ -27,3 +27,7 @@ Next iteration should do Task 10: Implement `POST /generate_bracket/` — persis
 ## Iteration 7 — Tasks 10 + 11: Bracket GET + POST endpoints
 Created `src/EventManager.Api/BracketEndpoints.cs` with `GET /bracket/`, `GET /bracket/{id}/`, and `POST /generate_bracket/`. Combined both tasks because GET /bracket/{id}/ test seeds via POST /generate_bracket/ (same coupling pattern as prior endpoint pairs). POST partitions competitor_ids into pairs (2 per match; last group has 1 if odd), inserts a bracket row then bracket_match rows storing competitor_ids as JSON text, returns BracketDto. GET endpoints query brackets + bracket_matches and reconstruct BracketDto with nested BracketMatchDto array. Wired `BracketEndpoints.Map(app)` in Program.cs. All 3 BracketTests pass (crits 5, 6, 14); verify.ps1 -Gate is green.
 Next iteration should do Task 12: Add a repo-root Dockerfile (multi-stage build) with ENTRYPOINT running EventManager.Api.
+
+## Iteration 8 — Task 12: Add Dockerfile
+Created `Dockerfile` at repo root with a multi-stage build: SDK image runs `dotnet publish src/EventManager.Api/`, aspnet runtime image copies the publish output and sets `ENTRYPOINT ["dotnet", "EventManager.Api.dll"]`. The DeliverableTests.Dockerfile_exists_and_publishes_the_api test checks that the file exists, contains "EventManager.Api", and contains "ENTRYPOINT" — all satisfied. `verify.ps1 -Gate` exits 0.
+Next iteration should do Task 13: Add `postman/EventManager.postman_collection.json` covering all 8 required endpoints — turns the Postman deliverable test green.
