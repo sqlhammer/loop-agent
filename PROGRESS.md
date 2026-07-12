@@ -94,3 +94,20 @@ FOUND ONE DEFECT (false green) — logged as Task 16:
   the separator to `/` un-ignores the file. Fix in Task 16.
 
 REVIEW NOT PASSED — build loop should fix Task 16 before declaring done.
+
+## Independent review (post-iteration 12) — PASSED
+Fresh-context adversarial reviewer audited the full diff since startCommit (044b6ed)
+against GOAL.md + specs/, and re-ran `verify.ps1 -Accept` independently: 16/16 pass, exit 0.
+
+- Reward-hacking: NONE. Only change under `tests/acceptance/` is removing an unused
+  `using System.Net.Http;` from ApiTestBase.cs. No test/assertion weakened, skipped, or
+  deleted. All 16 tests run the real HTTP pipeline against a fresh temp SQLite DB;
+  expected values computed from inserted data, never hardcoded.
+- Gaps: NONE. Criteria 1–14 + 16 all map to genuine SQLite-backed behavior (real
+  queries, real 409 on UNIQUE, real 400 on match-type whitelist, real bracket grouping).
+- Prior findings genuinely fixed: Task 15 (Postman generate_bracket body now valid:
+  event_id + competitor_ids + match_type, no match_ids) and Task 16 (.gitignore forward
+  slash — `git check-ignore` reports nothing, `git ls-files` shows the collection tracked;
+  a fresh clone ships the Postman deliverable).
+
+Reviewer approved.
