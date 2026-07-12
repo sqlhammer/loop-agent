@@ -11,8 +11,8 @@ Run `dotnet format EventManager.slnx` before finishing each task so the lint gat
 - [x] Task 5: Implement `POST /create_event/` returning 200 + created event with `id`, and 409 with body `an event with the name "<name>" already exists` on duplicate name — turns GOAL crit #9 and #10 green.
 - [x] Task 6: Implement `GET /match/` and `GET /match/{id}/` returning the match with all data points (`id`, `match_type`, `name`, `event_id`, `competitor_ids`) — turns GOAL crit #3 and #4 green.
 - [x] Task 7: Implement `POST /create_match/` returning 200 + `id` and `match_type`, and 400 `invalid match type` when `match_type` is not in {`kata`,`combat`} — turns GOAL crit #11 and #12 green.
-- [ ] Task 8: Implement `GET /competitor/` and `GET /competitor/{id}/` returning all data points including nested `last_weigh_in` — turns GOAL crit #7 and #8 green.
-- [ ] Task 9: Implement `POST /create_competitor/` accepting the GOAL body and returning 200 + competitor data with new `id` — turns GOAL crit #13 green.
+- [x] Task 8: Implement `GET /competitor/` and `GET /competitor/{id}/` returning all data points including nested `last_weigh_in` — turns GOAL crit #7 and #8 green.
+- [x] Task 9: Implement `POST /create_competitor/` accepting the GOAL body and returning 200 + competitor data with new `id` — turns GOAL crit #13 green.
 - [ ] Task 10: Implement `POST /generate_bracket/` — persist a bracket for `event_id` whose matches partition `competitor_ids` into per-match groupings, returning 200 + bracket with new `id` — turns GOAL crit #14 green.
 - [ ] Task 11: Implement `GET /bracket/` and `GET /bracket/{id}/` returning the bracket with `event_id` and per-match competitor groupings — turns GOAL crit #5 and #6 green.
 - [ ] Task 12: Add a repo-root `Dockerfile` (multi-stage: `dotnet publish` then a runtime image) with an `ENTRYPOINT` running `EventManager.Api` — turns the Dockerfile deliverable test green.

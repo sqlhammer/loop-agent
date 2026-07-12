@@ -19,3 +19,7 @@ Next iteration should do Task 6: Implement `GET /match/` and `GET /match/{id}/`.
 ## Iteration 5 — Tasks 6 + 7: Match GET + POST endpoints
 Created `src/EventManager.Api/MatchEndpoints.cs` with `GET /match/`, `GET /match/{id}/`, and `POST /create_match/`. Combined both tasks because the acceptance test for crit #4 seeds via POST before GET (same coupling as events). POST validates match_type against {kata, combat} whitelist, returns 400 plain text "invalid match type" on invalid type. competitor_ids stored as JSON text in DB, deserialized on read. Wired `MatchEndpoints.Map(app)` in Program.cs. All 4 MatchTests pass; verify.ps1 -Gate is green.
 Next iteration should do Task 8: Implement `GET /competitor/` and `GET /competitor/{id}/` with nested `last_weigh_in` object.
+
+## Iteration 6 — Tasks 8 + 9: Competitor GET + POST endpoints
+Created `src/EventManager.Api/CompetitorEndpoints.cs` with `GET /competitor/`, `GET /competitor/{id}/`, and `POST /create_competitor/`. Combined both tasks because the acceptance test for crit #8 seeds via POST before GET (same coupling as event/match pairs). Styles stored as JSON text in DB; last_weigh_in split into two flat columns (weigh_in_weight, weigh_in_units), reconstructed as nested WeighInDto on read. Wired `CompetitorEndpoints.Map(app)` in Program.cs. All 3 CompetitorTests pass; verify.ps1 -Gate is green.
+Next iteration should do Task 10: Implement `POST /generate_bracket/` — persist a bracket for `event_id` whose matches partition `competitor_ids` into per-match groupings, returning 200 + bracket with new `id`.
