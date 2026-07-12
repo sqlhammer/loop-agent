@@ -65,3 +65,7 @@ FOUND ONE DEFECT (not covered by automated tests, but implied by GOAL):
   a canned request that 500s violates both. Logged as Task 15.
 
 REVIEW NOT PASSED — build loop should fix Task 15 before declaring done.
+
+## Iteration 11 — Task 15: Fix Postman generate_bracket body
+Changed the `POST /generate_bracket/` example body in `postman/EventManager.postman_collection.json` from `{"event_id":1,"match_ids":[1,2,3],"competitor_ids":[1,2,3,4,5,6,7,8]}` to `{"event_id":1,"competitor_ids":[1,2,3,4,5,6,7,8],"match_type":"combat"}` — drops the bogus `match_ids` field and adds the required `match_type` field that the API needs to avoid the NOT NULL constraint violation. `verify.ps1 -Accept` exits 0, all 16 tests still pass.
+All tasks complete — no further work required.
