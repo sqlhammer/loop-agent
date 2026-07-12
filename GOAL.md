@@ -20,6 +20,9 @@ An event management application that specialized in running martial arts touranm
 
 ## Stack & constraints
 - Language/runtime: C#, .NET 10
+- Build the project in directory: C:\repos\EventManager
+  - init a git repo for that directory before adding any files
+  - All commits must be in the EventManager repo, not the loop-agent repo
 - Test runner: <the command verify.ps1's Invoke-Test runs, e.g. `npm test`>.
 - Constraints: 
   - Event data is durable using SQLite
