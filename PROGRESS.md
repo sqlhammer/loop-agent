@@ -156,3 +156,8 @@ FOUND ONE DEFECT (false green) — logged as Task 18:
   deliverable repo with a mojibake junk filename is a quality defect. Delete the tracked file.
 
 REVIEW NOT PASSED — build loop should complete Task 18 (remove the stray file) before declaring done.
+
+## Iter 14 — Task 18: Remove stray mojibake junk file
+- Did: Confirmed `git ls-files` showed `"C\357\200\272reposEventManagerPROGRESS.md"` (mojibake of the Windows path `C:\repos\EventManager\PROGRESS.md`). Ran `git rm` using `printf` to construct the exact filename; working tree and index now clean. All 17 acceptance tests still pass; `verify.ps1 -Accept` exits 0.
+- Why: The garbage-named file was committed by a botched PROGRESS.md write in iter 12 (commit 60c1dfb); its content duplicated the real PROGRESS.md section so no information was lost — it was pure cruft.
+- Next: All plan tasks are now marked `[x]`. The supervisor should run `verify.ps1 -Accept` to confirm all 17 tests are green and declare the goal done.
