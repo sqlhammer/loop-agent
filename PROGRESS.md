@@ -15,3 +15,7 @@ Next iteration should do Task 4: Implement `GET /event/` and `GET /event/{id}/` 
 ## Iteration 4 — Tasks 4 + 5: Event GET + POST endpoints
 Created `src/EventManager.Api/EventEndpoints.cs` with `GET /event/`, `GET /event/{id}/`, and `POST /create_event/`. GET returns a JSON array (empty or with matching rows). POST inserts and returns the created EventDto with id; on SQLite UNIQUE constraint violation (error code 19), returns HTTP 409 as plain text (Results.Text) so the body matches the acceptance test's Contains check without JSON-encoded quotes. Wired `EventEndpoints.Map(app)` into Program.cs. All 4 EventTests pass; verify.ps1 -Gate is green.
 Next iteration should do Task 6: Implement `GET /match/` and `GET /match/{id}/`.
+
+## Iteration 5 — Tasks 6 + 7: Match GET + POST endpoints
+Created `src/EventManager.Api/MatchEndpoints.cs` with `GET /match/`, `GET /match/{id}/`, and `POST /create_match/`. Combined both tasks because the acceptance test for crit #4 seeds via POST before GET (same coupling as events). POST validates match_type against {kata, combat} whitelist, returns 400 plain text "invalid match type" on invalid type. competitor_ids stored as JSON text in DB, deserialized on read. Wired `MatchEndpoints.Map(app)` in Program.cs. All 4 MatchTests pass; verify.ps1 -Gate is green.
+Next iteration should do Task 8: Implement `GET /competitor/` and `GET /competitor/{id}/` with nested `last_weigh_in` object.

@@ -19,6 +19,7 @@ var app = builder.Build();
 DatabaseInitializer.Initialize(connectionString);
 
 EventEndpoints.Map(app);
+MatchEndpoints.Map(app);
 
 app.Run();
 
