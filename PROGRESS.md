@@ -69,3 +69,28 @@ REVIEW NOT PASSED — build loop should fix Task 15 before declaring done.
 ## Iteration 11 — Task 15: Fix Postman generate_bracket body
 Changed the `POST /generate_bracket/` example body in `postman/EventManager.postman_collection.json` from `{"event_id":1,"match_ids":[1,2,3],"competitor_ids":[1,2,3,4,5,6,7,8]}` to `{"event_id":1,"competitor_ids":[1,2,3,4,5,6,7,8],"match_type":"combat"}` — drops the bogus `match_ids` field and adds the required `match_type` field that the API needs to avoid the NOT NULL constraint violation. `verify.ps1 -Accept` exits 0, all 16 tests still pass.
 All tasks complete — no further work required.
+
+## Independent review (post-iteration 11) — NOT PASSED
+Fresh-context adversarial reviewer audited the full diff since startCommit (044b6ed)
+against GOAL.md + specs/, re-ran `verify.ps1 -Accept` independently: 16/16 pass, exit 0.
+
+Reward-hacking / gap / regression checks:
+- Acceptance tests NOT weakened — only change under `tests/acceptance/` is removing an
+  unused `using System.Net.Http;` from ApiTestBase.cs. All 16 tests still run and
+  exercise real SQLite-backed behavior; expected values are computed from inserted
+  data, never hardcoded to the tests.
+- All 14 functional criteria + the Docker deliverable map to genuine implementation.
+
+FOUND ONE DEFECT (false green) — logged as Task 16:
+- The Postman collection deliverable is **gitignored and untracked in the repo**.
+  `.gitignore:15` `postman/*` ignores it; the intended re-include on line 16
+  `!postman\EventManager.postman_collection.json` uses a **backslash** separator, which
+  git does not treat as a path separator (it's an escape), so the negation never matches
+  `postman/EventManager.postman_collection.json`. Confirmed via
+  `git check-ignore -v` (matches `.gitignore:15`) and `git ls-files postman/` (empty).
+  `DeliverableTests` passes only because it reads the working-tree file from disk, not
+  git — a fresh clone/`git clean` would have NO Postman collection, violating the GOAL
+  deliverable "a postman collection for the various features." Verified that switching
+  the separator to `/` un-ignores the file. Fix in Task 16.
+
+REVIEW NOT PASSED — build loop should fix Task 16 before declaring done.
