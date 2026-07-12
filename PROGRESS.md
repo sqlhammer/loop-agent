@@ -31,3 +31,7 @@ Next iteration should do Task 12: Add a repo-root Dockerfile (multi-stage build)
 ## Iteration 8 — Task 12: Add Dockerfile
 Created `Dockerfile` at repo root with a multi-stage build: SDK image runs `dotnet publish src/EventManager.Api/`, aspnet runtime image copies the publish output and sets `ENTRYPOINT ["dotnet", "EventManager.Api.dll"]`. The DeliverableTests.Dockerfile_exists_and_publishes_the_api test checks that the file exists, contains "EventManager.Api", and contains "ENTRYPOINT" — all satisfied. `verify.ps1 -Gate` exits 0.
 Next iteration should do Task 13: Add `postman/EventManager.postman_collection.json` covering all 8 required endpoints — turns the Postman deliverable test green.
+
+## Iteration 9 — Task 13: Add Postman collection
+Created `postman/EventManager.postman_collection.json` — a valid Postman v2.1 collection with 12 requests covering all 8 required endpoint families (GET /event, GET /match, GET /bracket, GET /competitor, POST /create_event, POST /create_match, POST /create_competitor, POST /generate_bracket). The DeliverableTests.Postman_collection_exists_and_covers_every_required_endpoint test checks file existence, valid JSON, and presence of all 8 endpoint strings — all pass. `verify.ps1 -Gate` exits 0.
+Next iteration should do Task 14: Run `dotnet format`, fix any remaining lint/build issues, and confirm `verify.ps1 -Accept` exits 0 (full acceptance suite green).
