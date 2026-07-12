@@ -18,6 +18,8 @@ var app = builder.Build();
 
 DatabaseInitializer.Initialize(connectionString);
 
+EventEndpoints.Map(app);
+
 app.Run();
 
 public partial class Program { }
