@@ -13,5 +13,5 @@ obj/
 
 # postman
 postman/*
-!postman\EventManager.postman_collection.json
+!postman/EventManager.postman_collection.json
 /.postman
