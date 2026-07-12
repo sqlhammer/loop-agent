@@ -129,3 +129,30 @@ Reviewer approved.
 - Did: Added competitor-existence check in `BracketEndpoints.GenerateBracket` before any INSERT. Uses `SELECT COUNT(*) FROM competitors WHERE id IN (...)` with parameterized placeholders; if count < requested count, returns 400 with plain-text body `"unknown competitor id"` and persists nothing. All 17 acceptance tests pass (new test `Generate_bracket_with_no_competitors_in_db_rejects_unknown_ids` now green alongside all previous).
 - Why: ASSUMPTIONS.md #14 — bracket generation must not fabricate rows from phantom competitor IDs that have no DB record.
 - Next: All plan tasks are now complete (`[x]`). The supervisor should run `verify.ps1 -Accept` to confirm all 17 tests are green and declare the goal done.
+
+## Independent review (post-iteration 13) — NOT PASSED
+Fresh-context adversarial reviewer audited the full diff since startCommit (044b6ed) against
+GOAL.md + specs/, and re-ran `verify.ps1 -Accept` independently: **17/17 pass, exit 0**.
+
+Reward-hacking / gap / regression checks:
+- Acceptance tests NOT weakened. Changes under `tests/acceptance/` are (a) removal of an
+  unused `using System.Net.Http;` in ApiTestBase.cs and (b) an ADDED, stronger test
+  (`Generate_bracket_with_no_competitors_in_db_rejects_unknown_ids`). Nothing skipped,
+  deleted, or weakened. All tests run the real HTTP pipeline against a fresh temp SQLite DB.
+- No hardcoded/stubbed values. Every endpoint (event/match/competitor/bracket, GET + POST)
+  is backed by real parameterized SQLite queries; expected values are computed from inserted
+  data, never pinned to the tests. Verified crit 9/10 (real 409 on UNIQUE), 11/12 (real 400
+  on match-type whitelist), 13 (nested last_weigh_in round-trips), 14 (real bracket grouping),
+  and the unknown-competitor-id 400 (real `SELECT COUNT(*) FROM competitors` membership check).
+- Deliverables genuine: Dockerfile publishes EventManager.Api; Postman collection is now
+  git-tracked (`git check-ignore` exits 1, `git ls-files postman/` lists it).
+
+FOUND ONE DEFECT (false green) — logged as Task 18:
+- A garbage-named file `"C\357\200\272reposEventManagerPROGRESS.md"` (mojibake of the Windows
+  path `C:\repos\EventManager\PROGRESS.md`) was accidentally committed in iter 12 (commit
+  60c1dfb) by a botched PROGRESS.md write and is TRACKED in the repo (`git ls-files` shows it).
+  Its content duplicates the "Iteration 12 — Task 16" section already in the real PROGRESS.md,
+  so nothing is lost — it is pure cruft. It breaks no acceptance test, but shipping the human a
+  deliverable repo with a mojibake junk filename is a quality defect. Delete the tracked file.
+
+REVIEW NOT PASSED — build loop should complete Task 18 (remove the stray file) before declaring done.
