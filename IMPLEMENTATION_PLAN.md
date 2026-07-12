@@ -17,4 +17,4 @@ Run `dotnet format EventManager.slnx` before finishing each task so the lint gat
 - [x] Task 11: Implement `GET /bracket/` and `GET /bracket/{id}/` returning the bracket with `event_id` and per-match competitor groupings — turns GOAL crit #5 and #6 green.
 - [x] Task 12: Add a repo-root `Dockerfile` (multi-stage: `dotnet publish` then a runtime image) with an `ENTRYPOINT` running `EventManager.Api` — turns the Dockerfile deliverable test green.
 - [x] Task 13: Add `postman/EventManager.postman_collection.json` with a request for every required endpoint (the 4 GET families and the 4 POST creates) — turns the Postman deliverable test green.
-- [ ] Task 14: Run `dotnet format`, fix any remaining lint/build issues, and confirm `verify.ps1 -Accept` exits 0 (GOAL crit #16 — full suite green).
+- [x] Task 14: Run `dotnet format`, fix any remaining lint/build issues, and confirm `verify.ps1 -Accept` exits 0 (GOAL crit #16 — full suite green).

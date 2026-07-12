@@ -35,3 +35,7 @@ Next iteration should do Task 13: Add `postman/EventManager.postman_collection.j
 ## Iteration 9 — Task 13: Add Postman collection
 Created `postman/EventManager.postman_collection.json` — a valid Postman v2.1 collection with 12 requests covering all 8 required endpoint families (GET /event, GET /match, GET /bracket, GET /competitor, POST /create_event, POST /create_match, POST /create_competitor, POST /generate_bracket). The DeliverableTests.Postman_collection_exists_and_covers_every_required_endpoint test checks file existence, valid JSON, and presence of all 8 endpoint strings — all pass. `verify.ps1 -Gate` exits 0.
 Next iteration should do Task 14: Run `dotnet format`, fix any remaining lint/build issues, and confirm `verify.ps1 -Accept` exits 0 (full acceptance suite green).
+
+## Iteration 10 — Task 14: Full acceptance suite green
+Ran `dotnet format EventManager.slnx` (no changes needed) and `verify.ps1 -Accept` — all 16 acceptance tests passed (Failed: 0, Passed: 16). Build, lint, and full test suite are all green. All tasks in IMPLEMENTATION_PLAN.md are complete. The project is done.
+No further tasks remain.
