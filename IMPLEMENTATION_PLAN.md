@@ -5,7 +5,7 @@ iteration. Acceptance tests under `tests/acceptance/` are the spec — never edi
 Run `dotnet format EventManager.slnx` before finishing each task so the lint gate stays green.
 
 - [x] Task 1: Scaffold `src/EventManager.Api` (`Microsoft.NET.Sdk.Web`, `net10.0`) with a `Program.cs` that builds and runs a host and exposes `public partial class Program`; confirm `verify.ps1 -Gate` (build + lint) exits 0.
-- [ ] Task 2: Add SQLite persistence wiring — read connection string from configuration `ConnectionStrings:Default` (default `Data Source=eventmanager.db`), open the connection, and create all tables (events, matches, competitors, brackets, bracket_matches) on startup if absent.
+- [x] Task 2: Add SQLite persistence wiring — read connection string from configuration `ConnectionStrings:Default` (default `Data Source=eventmanager.db`), open the connection, and create all tables (events, matches, competitors, brackets, bracket_matches) on startup if absent.
 - [ ] Task 3: Configure `System.Text.Json` for snake_case (`JsonNamingPolicy.SnakeCaseLower`) on all API responses/requests, and define the DTO/record types for event, match, competitor, and bracket per specs/OVERVIEW.md.
 - [ ] Task 4: Implement `GET /event/` and `GET /event/{id}/` (return a JSON array; empty array when none) — turns GOAL crit #1 and #2 green.
 - [ ] Task 5: Implement `POST /create_event/` returning 200 + created event with `id`, and 409 with body `an event with the name "<name>" already exists` on duplicate name — turns GOAL crit #9 and #10 green.
