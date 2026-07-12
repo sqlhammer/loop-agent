@@ -21,6 +21,7 @@ DatabaseInitializer.Initialize(connectionString);
 EventEndpoints.Map(app);
 MatchEndpoints.Map(app);
 CompetitorEndpoints.Map(app);
+BracketEndpoints.Map(app);
 
 app.Run();
 
