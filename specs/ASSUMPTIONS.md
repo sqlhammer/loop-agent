@@ -59,3 +59,11 @@ encodes the corresponding decision.
 
 13. **Response status is 200 (not 201) for creates**, exactly as the GOAL criteria state
     ("returns 200 and the ... id").
+
+14. **`generate_bracket` rejects unknown competitor ids.** GOAL crit #14 only covers the
+    happy path (competitors that already exist). On an empty database — or any request
+    whose `competitor_ids` include an id with no matching competitor row — the endpoint
+    cannot legitimately group a competitor it has no record of, so it must not fabricate a
+    bracket from those ids. `POST /generate_bracket/` validates every id against the
+    `competitors` table first and returns **400** with body containing
+    `unknown competitor id` when any is missing, persisting no bracket or match rows.

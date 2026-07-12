@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Skill(deep-research)",
-      "Skill(deep-research:*)"
+      "Skill(deep-research:*)",
+      "Bash(dotnet test *)",
+      "Bash(dotnet format *)"
     ]
   }
 }

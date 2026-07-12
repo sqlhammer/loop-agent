@@ -1,0 +1,12 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      ConnectionStrings__Default: "Data Source=/data/eventmanager.db"
+    volumes:
+      - eventmanager-data:/data
+
+volumes:
+  eventmanager-data:

@@ -95,6 +95,19 @@ FOUND ONE DEFECT (false green) — logged as Task 16:
 
 REVIEW NOT PASSED — build loop should fix Task 16 before declaring done.
 
+## New acceptance test added (post-iteration 12, outside the build loop)
+Added `BracketTests.Generate_bracket_with_no_competitors_in_db_rejects_unknown_ids`: GIVEN
+an empty database (no competitors exist), `POST /generate_bracket/` must not fabricate a
+bracket from `competitor_ids` that don't reference real rows — it must return 400 with body
+containing `unknown competitor id` and persist nothing. Documented as specs/ASSUMPTIONS.md
+#14 and specs/OVERVIEW.md error-shapes/bracket-generation sections. Logged as
+IMPLEMENTATION_PLAN.md Task 17 (currently `[ ]`, unimplemented).
+`dotnet format EventManager.slnx --verify-no-changes` is clean. `dotnet test` shows 16
+passed / 1 failed (the new test) — this is the expected RED state until Task 17 lands;
+`BracketEndpoints.GenerateBracket` (src/EventManager.Api/BracketEndpoints.cs) still inserts
+brackets/matches unconditionally without checking `competitors` table membership.
+Next iteration should do Task 17: add the existence check and return 400 on unknown ids.
+
 ## Independent review (post-iteration 12) — PASSED
 Fresh-context adversarial reviewer audited the full diff since startCommit (044b6ed)
 against GOAL.md + specs/, and re-ran `verify.ps1 -Accept` independently: 16/16 pass, exit 0.
@@ -111,3 +124,8 @@ against GOAL.md + specs/, and re-ran `verify.ps1 -Accept` independently: 16/16 p
   a fresh clone ships the Postman deliverable).
 
 Reviewer approved.
+
+## Iter 13 — Task 17: Validate competitor IDs in POST /generate_bracket/
+- Did: Added competitor-existence check in `BracketEndpoints.GenerateBracket` before any INSERT. Uses `SELECT COUNT(*) FROM competitors WHERE id IN (...)` with parameterized placeholders; if count < requested count, returns 400 with plain-text body `"unknown competitor id"` and persists nothing. All 17 acceptance tests pass (new test `Generate_bracket_with_no_competitors_in_db_rejects_unknown_ids` now green alongside all previous).
+- Why: ASSUMPTIONS.md #14 — bracket generation must not fabricate rows from phantom competitor IDs that have no DB record.
+- Next: All plan tasks are now complete (`[x]`). The supervisor should run `verify.ps1 -Accept` to confirm all 17 tests are green and declare the goal done.

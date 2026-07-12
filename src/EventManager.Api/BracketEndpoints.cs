@@ -28,12 +28,24 @@ public static class BracketEndpoints
     {
         using var conn = Open(db);
 
+        var ids = req.CompetitorIds;
+
+        if (ids.Length > 0)
+        {
+            var placeholders = string.Join(",", ids.Select((_, i) => $"@c{i}"));
+            using var check = conn.CreateCommand();
+            check.CommandText = $"SELECT COUNT(*) FROM competitors WHERE id IN ({placeholders})";
+            for (var i = 0; i < ids.Length; i++)
+                check.Parameters.AddWithValue($"@c{i}", ids[i]);
+            var found = (long)check.ExecuteScalar()!;
+            if (found < ids.Length)
+                return Results.BadRequest("unknown competitor id");
+        }
+
         using var insertBracket = conn.CreateCommand();
         insertBracket.CommandText = "INSERT INTO brackets (event_id) VALUES (@eid) RETURNING id";
         insertBracket.Parameters.AddWithValue("@eid", req.EventId);
         var bracketId = (int)(long)insertBracket.ExecuteScalar()!;
-
-        var ids = req.CompetitorIds;
         var bracketMatches = new List<BracketMatchDto>();
 
         for (var i = 0; i < ids.Length; i += 2)

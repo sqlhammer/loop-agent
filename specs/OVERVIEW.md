@@ -63,12 +63,15 @@ The API speaks **snake_case** JSON (matching the GOAL's `create_competitor` exam
 - Duplicate event name → **409** with body containing exactly:
   `an event with the name "Test Event 1" already exists` (the name is echoed).
 - Invalid match type → **400** with body containing `invalid match type`.
+- Unknown competitor id(s) → **400** with body containing `unknown competitor id`.
 
 ## Bracket generation
 `POST /generate_bracket/` accepts `{ "event_id", "competitor_ids": [...], "match_type" }`.
 It creates and persists a bracket whose `matches` partition the supplied competitors into
 per-match groupings (e.g. pairwise first-round matchups), and returns the bracket with its
-new `id`. Every supplied competitor id must appear in exactly one grouping.
+new `id`. Every supplied competitor id must appear in exactly one grouping. Every supplied
+competitor id must also already exist in the database — the endpoint never fabricates a
+bracket for ids that don't reference real competitors; it rejects the request instead.
 
 ## Verification
 `verify.ps1` drives the definition of done:

@@ -62,6 +62,26 @@ public sealed class BracketTests : ApiTestBase
         AssertBracketShape(bracket, idEl.GetInt32(), competitorIds);
     }
 
+    // ASSUMPTIONS.md #14: an empty database has no real competitors, so
+    // POST /generate_bracket/ must not fabricate a bracket from competitor ids that don't
+    // exist — it rejects with 400 instead of persisting a bracket for phantom competitors.
+    [Fact]
+    public async Task Generate_bracket_with_no_competitors_in_db_rejects_unknown_ids()
+    {
+        var eventId = await CreateEventAsync("Championship");
+
+        var resp = await PostJson("/generate_bracket/",
+            $$"""{"event_id":{{eventId}},"competitor_ids":[1,2,3,4,5,6,7,8],"match_type":"combat"}""");
+
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+        var body = await BodyText(resp);
+        Assert.Contains("unknown competitor id", body);
+
+        // No phantom bracket should have been persisted.
+        var brackets = await BodyJson(await Client.GetAsync("/bracket/"));
+        Assert.Equal(0, brackets.GetArrayLength());
+    }
+
     // A bracket carries its id, its event id, and matches whose per-match competitor
     // groupings together cover every competitor that was entered.
     private static void AssertBracketShape(JsonElement bracket, int expectedId, IReadOnlyCollection<int> competitorIds)
