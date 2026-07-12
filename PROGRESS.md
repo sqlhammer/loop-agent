@@ -161,3 +161,29 @@ REVIEW NOT PASSED — build loop should complete Task 18 (remove the stray file)
 - Did: Confirmed `git ls-files` showed `"C\357\200\272reposEventManagerPROGRESS.md"` (mojibake of the Windows path `C:\repos\EventManager\PROGRESS.md`). Ran `git rm` using `printf` to construct the exact filename; working tree and index now clean. All 17 acceptance tests still pass; `verify.ps1 -Accept` exits 0.
 - Why: The garbage-named file was committed by a botched PROGRESS.md write in iter 12 (commit 60c1dfb); its content duplicated the real PROGRESS.md section so no information was lost — it was pure cruft.
 - Next: All plan tasks are now marked `[x]`. The supervisor should run `verify.ps1 -Accept` to confirm all 17 tests are green and declare the goal done.
+
+## Independent review (post-iteration 14) — PASSED
+Fresh-context adversarial reviewer audited the full diff since startCommit (044b6ed) against
+GOAL.md + specs/, and re-ran `verify.ps1 -Accept` independently: **17/17 pass, exit 0**.
+
+Reward-hacking / gap / regression checks:
+- Acceptance tests NOT weakened. The only changes under `tests/acceptance/` since startCommit
+  are (a) removal of an unused `using System.Net.Http;` from ApiTestBase.cs and (b) an ADDED,
+  stronger test (`Generate_bracket_with_no_competitors_in_db_rejects_unknown_ids`). Nothing was
+  skipped, deleted, or weakened. Every test runs the real HTTP pipeline via
+  `WebApplicationFactory<Program>` against a fresh temp SQLite DB.
+- No hardcoded/stubbed values. Every endpoint (event/match/competitor/bracket, GET + POST) is
+  backed by real parameterized SQLite queries; expected values are computed from inserted data.
+  Verified crit 1–2 (event GET array + full fields), 3–4 (match), 5–6 (bracket with per-match
+  competitor groupings), 7–8 (competitor with nested last_weigh_in), 9 (create_event 200+id),
+  10 (real 409 on UNIQUE with echoed name), 11 (create_match 200+id+match_type), 12 (real 400
+  on match-type whitelist), 13 (competitor round-trips styles + nested weigh-in), 14 (real
+  bracket grouping), plus the ASSUMPTIONS #14 unknown-competitor-id 400 (real
+  `SELECT COUNT(*) FROM competitors` membership check that persists nothing).
+- Deliverables genuine and git-tracked: Dockerfile publishes EventManager.Api with ENTRYPOINT;
+  Postman collection is tracked (`git check-ignore` exits 1, `git ls-files postman/` lists it).
+- Prior review findings all genuinely fixed: Task 15 (valid Postman generate_bracket body),
+  Task 16 (.gitignore forward-slash re-include), Task 18 (mojibake junk file removed — no
+  odd-named files in `git ls-files`, working tree clean).
+
+Reviewer approved.
