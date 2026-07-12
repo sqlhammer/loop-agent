@@ -24,20 +24,23 @@
 param([switch]$Gate, [switch]$Accept)
 $ErrorActionPreference = "Continue"
 
+$Solution = Join-Path $PSScriptRoot "EventManager.slnx"
+
 function Invoke-Build {
-  npm run build 2>&1 | Write-Host
+  dotnet build $Solution -c Release --nologo 2>&1 | Write-Host
   return ($LASTEXITCODE -eq 0)
 }
 
 function Invoke-Lint {
-  npm run lint 2>&1 | Write-Host
+  # Style/format gate. Agents must run `dotnet format EventManager.slnx` before finishing.
+  dotnet format $Solution --verify-no-changes 2>&1 | Write-Host
   return ($LASTEXITCODE -eq 0)
 }
 
 function Invoke-Test {
-  # MUST run the full suite, including tests/acceptance/. Configure your test
-  # runner so that acceptance tests are discovered here.
-  npm test 2>&1 | Write-Host
+  # MUST run the full suite, including tests/acceptance/. `dotnet test` discovers
+  # every test project in the solution (xUnit acceptance tests live under tests/acceptance/).
+  dotnet test $Solution -c Release --nologo 2>&1 | Write-Host
   return ($LASTEXITCODE -eq 0)
 }
 
