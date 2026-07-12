@@ -39,3 +39,29 @@ Next iteration should do Task 14: Run `dotnet format`, fix any remaining lint/bu
 ## Iteration 10 — Task 14: Full acceptance suite green
 Ran `dotnet format EventManager.slnx` (no changes needed) and `verify.ps1 -Accept` — all 16 acceptance tests passed (Failed: 0, Passed: 16). Build, lint, and full test suite are all green. All tasks in IMPLEMENTATION_PLAN.md are complete. The project is done.
 No further tasks remain.
+
+## Independent review (post-iteration 10)
+Adversarial reviewer with fresh context audited the whole diff since startCommit
+(044b6ed) against GOAL.md + specs/, and re-ran `verify.ps1 -Accept` independently:
+build + lint + all 16 acceptance tests green, exit 0.
+
+Checked for reward-hacking / gaps / regressions:
+- Acceptance tests NOT weakened: the only change under `tests/acceptance/` is the
+  removal of an unused `using System.Net.Http;` from ApiTestBase.cs — no assertion,
+  scenario, or test was deleted/skipped/edited. All 16 still run and exercise real
+  behavior. (Minor: touches a test-support file, but harmless to the definition of done.)
+- No hardcoded/stubbed values: every endpoint is backed by real SQLite queries;
+  expected values are computed from inserted data, not pinned to the tests.
+- All 14 functional criteria + Docker/Postman deliverables map to genuine behavior.
+
+FOUND ONE DEFECT (not covered by automated tests, but implied by GOAL):
+- The Postman collection's `POST /generate_bracket/` example body sends
+  `{event_id, match_ids, competitor_ids}` — it includes an ignored `match_ids`
+  field and OMITS the required `match_type`. Executing it makes `match_type`
+  deserialize to null; the subsequent `INSERT INTO bracket_matches` violates the
+  `NOT NULL` constraint on `match_type` and throws an unhandled SqliteException →
+  HTTP 500. GOAL requires the API be "exercisable end-to-end through a Postman
+  collection" and the human checklist requires output that is "genuinely useful";
+  a canned request that 500s violates both. Logged as Task 15.
+
+REVIEW NOT PASSED — build loop should fix Task 15 before declaring done.
