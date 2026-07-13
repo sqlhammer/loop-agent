@@ -1,0 +1,6 @@
+# Normalize line endings so the repo is portable between Windows and macOS.
+# The bash launcher MUST be LF or it breaks on macOS; pwsh scripts run fine with
+# LF on Windows too, so we standardize everything on LF to avoid diff churn.
+* text=auto eol=lf
+*.ps1 text eol=lf
+*.sh  text eol=lf

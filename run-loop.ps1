@@ -47,7 +47,7 @@ function Stop-OnAgentFailure {
   Write-Host " No commit made, no state change. Nothing was silently skipped." -ForegroundColor Red
   Write-Host " Common cause: headless 'claude -p' isn't authenticated (interactive login is separate)." -ForegroundColor Yellow
   Write-Host "   -> run 'claude setup-token' in your own terminal, then put the result in:" -ForegroundColor Yellow
-  Write-Host "        $PSScriptRoot\.env   as   CLAUDE_CODE_OAUTH_TOKEN=<token>" -ForegroundColor Yellow
+  Write-Host "        $(Join-Path $PSScriptRoot '.env')   as   CLAUDE_CODE_OAUTH_TOKEN=<token>" -ForegroundColor Yellow
   $resumeFlag = if ($Phase -match '^(build iteration|reviewer pass)') { ' -Approve' } else { '' }
   Write-Host "      then re-run: pwsh -File run-loop.ps1$resumeFlag" -ForegroundColor Yellow
   Write-Host " Full log is under .loop/logs/." -ForegroundColor Yellow
@@ -192,7 +192,7 @@ while ($state.iteration -lt $MaxIterations) {
       Write-Host " GOAL ACHIEVED — acceptance green + reviewer approved." -ForegroundColor Green
       Write-Host " Do your human acceptance testing now." -ForegroundColor Green
       Write-Host "==================================================" -ForegroundColor Green
-      [console]::Beep(880,300)
+      if ($IsWindows) { try { [console]::Beep(880,300) } catch {} }
       exit 0
     }
     Write-Host "  reviewer found gaps (added tasks) — continuing build loop." -ForegroundColor Yellow

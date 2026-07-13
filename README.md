@@ -6,7 +6,9 @@ through subscription usage limits. This guide is only how to **use** it. To star
 ## 1. Prerequisites (once)
 
 - `claude` (Claude Code CLI) on PATH and signed in (`claude` interactively should show your plan).
-- PowerShell 7+ (`pwsh`) and `git`.
+- PowerShell 7+ (`pwsh`) and `git`. On macOS: `brew install --cask powershell`.
+  (The harness is PowerShell but runs on Windows and macOS; the `claude setup-token`
+  and `.env` steps below are identical on both.)
 - **Headless auth token.** The loop runs `claude` non-interactively, which needs its own
   token even if interactive `claude` already works. Once:
   ```powershell
@@ -39,6 +41,9 @@ pwsh -File run-loop.ps1
 #    the goal wrong. Then start the unattended build loop:
 pwsh -File run-loop.ps1 -Approve
 ```
+
+On macOS/Linux you can use the `./run-loop.sh` launcher from a normal Terminal instead
+(same flags, forwarded to `pwsh`): `./run-loop.sh` then `./run-loop.sh -Approve`.
 
 Leave it running. It works one task at a time and, if it hits a usage limit, sleeps until
 the window reopens and resumes on its own. When it prints **GOAL ACHIEVED**, do your own
