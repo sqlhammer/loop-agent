@@ -1,0 +1,17 @@
+# .loop/projects — repos the supervisor commits + gates every build iteration.
+#
+# One repo path per line. Blank lines and lines starting with '#' are ignored.
+# Paths may be absolute or relative to this control repo's root.
+#
+# Mode 1 (self-contained): leave this empty. The only managed repo is this clone
+#   itself — build your product code right here alongside the harness. (Run
+#   `pwsh -File run-loop.ps1 -Detach` once first to sever the clone from loop-agent.)
+#
+# Mode 2 (external repos): list one or more external repos below. The supervisor
+#   also commits and gates each of them every iteration, and the reviewer diffs
+#   each from its own start commit. The plan phase may APPEND dirs named in GOAL.md;
+#   you review this file at the approval gate before the build loop runs.
+#
+# Example:
+# C:\repos\EventManager
+# ../another-service

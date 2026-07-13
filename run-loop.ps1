@@ -17,6 +17,7 @@ param(
   [switch]$Approve,
   [switch]$Replan,
   [switch]$Status,
+  [switch]$Detach,
   [switch]$NoPreflight,
   [int]$MaxIterations     = 300,
   [int]$StallLimit        = 8,
@@ -60,7 +61,34 @@ if (-not (Test-Path "GOAL.md"))   { Write-Host "GOAL.md not found. Fill it in fi
 if (-not (Test-Path "verify.ps1")){ Write-Host "verify.ps1 not found." -ForegroundColor Red; exit 1 }
 git rev-parse --is-inside-work-tree *> $null
 if ($LASTEXITCODE -ne 0) { Write-Host "Not a git repo. Run 'git init' first." -ForegroundColor Red; exit 1 }
-Ensure-GitBaseline
+
+# --- Mode 1 sever: turn this clone into a self-contained, independent project repo ---
+# Drops the harness remote(s) and orphans history into a single fresh root commit, so
+# the project shares NO commit SHAs or origin with loop-agent. Control repo only —
+# never touches external repos (those are the user's own repos with their own origins).
+if ($Detach) {
+  Write-Host "=== DETACH (Mode 1: sever this clone from loop-agent) ===" -ForegroundColor Cyan
+  Write-Host "Before — remotes:" -ForegroundColor DarkGray; git remote -v
+  $branch = (git branch --show-current).Trim()
+  foreach ($rm in ((git remote) -split '\r?\n' | Where-Object { $_ })) {
+    git remote remove $rm *> $null; Write-Host "  removed remote: $rm" -ForegroundColor DarkGray
+  }
+  git checkout --orphan _loop_fresh *> $null
+  git add -A *> $null
+  git commit -q -m "chore: project baseline (detached from loop-agent)" *> $null
+  if ($branch -and $branch -ne "_loop_fresh") { git branch -D $branch *> $null; git branch -m $branch *> $null }
+  git reflog expire --all --expire=now *> $null
+  git gc --prune=now *> $null
+  Write-Host "After — remotes / log:" -ForegroundColor DarkGray; git remote -v; git log --oneline
+  Write-Host ""
+  Write-Host "Detached: no origin, single root commit. Fill GOAL.md + verify.ps1, then:" -ForegroundColor Green
+  Write-Host "  pwsh -File run-loop.ps1" -ForegroundColor Green
+  exit 0
+}
+
+# Ensure every managed repo (this control repo + any external repos in .loop/projects)
+# is a git repo with a baseline commit. In Mode 1 this is just the control repo.
+foreach ($repo in (Get-ManagedRepos)) { Ensure-GitBaseline $repo }
 
 if (-not $NoPreflight -and -not $Status) {
   Write-Host "preflight: checking 'claude' is authenticated..." -ForegroundColor DarkGray
@@ -74,7 +102,15 @@ if (-not $NoPreflight -and -not $Status) {
 }
 
 $state = Get-LoopState
-if ($Status)  { $state | Format-List; exit 0 }
+if ($Status)  {
+  $state | Format-List
+  Write-Host "Managed repos:" -ForegroundColor Cyan
+  foreach ($repo in (Get-ManagedRepos)) {
+    $head = try { Get-Head $repo } catch { "(no commits)" }
+    Write-Host "  $repo  @ $head"
+  }
+  exit 0
+}
 if ($Replan)  {
   Remove-Item -ErrorAction SilentlyContinue IMPLEMENTATION_PLAN.md, .loop/REVIEW-PASS, .loop/commit-msg.txt
   $state.phase = "plan"; $state.iteration = 0; $state.stall = 0; Set-LoopState $state
@@ -118,7 +154,11 @@ if ($state.phase -eq "await_approval") {
     exit 0
   }
   git add -A *> $null; git commit -q -m "approve: human-approved plan + acceptance tests" --allow-empty *> $null
-  $state.startCommit = (Get-Head)
+  # Record the start commit of EVERY managed repo so the reviewer can diff each from its
+  # own baseline (product code may live in external repos, not just this control repo).
+  $sc = @{}
+  foreach ($repo in (Get-ManagedRepos)) { $sc[$repo] = (Get-Head $repo) }
+  $state.startCommits = $sc
   $state.phase = "build"; Set-LoopState $state
   Write-Host "Approved. Starting unattended build loop." -ForegroundColor Green
 }
@@ -144,24 +184,31 @@ while ($state.iteration -lt $MaxIterations) {
     Stop-OnAgentFailure -Phase "build iteration $($state.iteration)" -ErrMessage $_.Exception.Message
   }
 
-  # 2) Deterministic commit gate. Commit only real changes (no empty commits) so that
-  #    "no file changes" is a reliable stall signal. Record build/lint health in the
+  # 2) Deterministic commit gate, ACROSS EVERY MANAGED REPO. Commit only real changes
+  #    (no empty commits) so that "no repo changed" is a reliable stall signal. The build
+  #    (verify -Gate) is a single global health check; record its result in each commit
   #    message so the next fresh iteration knows it must fix the build first.
-  $dirty = [bool](git status --porcelain)
-  if ($dirty) {
+  $dirtyRepos = @()
+  foreach ($repo in (Get-ManagedRepos)) {
+    if ([bool](git -C $repo status --porcelain)) { $dirtyRepos += $repo }
+  }
+  if ($dirtyRepos.Count -gt 0) {
     $msg = if (Test-Path ".loop/commit-msg.txt") { (Get-Content ".loop/commit-msg.txt" -Raw).Trim() } else { "iteration $($state.iteration)" }
     if ($msg.Length -gt 120) { $msg = $msg.Substring(0,120) }
-    git add -A *> $null
-    if (Invoke-Verify -Target Gate) {
-      git commit -q -m "iter $($state.iteration): $msg" *> $null
-      Write-Host "  gate: PASS (committed)" -ForegroundColor Green
+    $gateOk = Invoke-Verify -Target Gate
+    $tag = if ($gateOk) { "" } else { " [gate-fail]" }
+    foreach ($repo in $dirtyRepos) {
+      git -C $repo add -A *> $null
+      git -C $repo commit -q -m "iter $($state.iteration)$($tag): $msg" *> $null
+    }
+    if ($gateOk) {
+      Write-Host "  gate: PASS (committed $($dirtyRepos.Count) repo(s))" -ForegroundColor Green
     } else {
-      git commit -q -m "iter $($state.iteration) [gate-fail]: $msg" *> $null
       Write-Host "  gate: FAIL — build/lint broken; next iteration must fix it first" -ForegroundColor Yellow
     }
     $state.stall = 0
   } else {
-    Write-Host "  no file changes this iteration (no progress)" -ForegroundColor Yellow
+    Write-Host "  no file changes this iteration in any managed repo (no progress)" -ForegroundColor Yellow
     $state.stall++
   }
 

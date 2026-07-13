@@ -11,3 +11,16 @@ file with project-specific conventions.
 - Prefer editing existing files over creating new ones. Match existing code style.
 - The supervisor runs the verifier and git — you never commit.
 
+## Where code lives (project topology)
+
+`.loop/projects` is the authority for which repos the supervisor manages:
+
+- **Self-contained (Mode 1):** `.loop/projects` is empty — the product is built in THIS
+  repo, alongside the harness.
+- **External repos (Mode 2):** `.loop/projects` lists one or more external repo paths — the
+  product is built there. Acceptance tests still live here in the control repo and exercise
+  the product through its real interface (HTTP/CLI).
+
+The supervisor commits and gates EVERY managed repo (this control repo + everything in
+`.loop/projects`) each iteration — build agents still never run git themselves.
+

@@ -37,25 +37,82 @@ function Import-DotEnv {
 # ---------------------------------------------------------------------------
 function Get-LoopState {
   $p = ".loop/state.json"
-  if (Test-Path $p) { return (Get-Content $p -Raw | ConvertFrom-Json) }
-  return [pscustomobject]@{ phase = "plan"; iteration = 0; stall = 0; startCommit = "" }
+  $raw = if (Test-Path $p) { Get-Content $p -Raw | ConvertFrom-Json } else { $null }
+  # Normalize to a consistent shape so downstream property assignments always succeed,
+  # even when reading a state.json written before a field (e.g. startCommits) existed.
+  $startCommits = @{}
+  if ($raw -and $raw.PSObject.Properties['startCommits'] -and $raw.startCommits) {
+    foreach ($prop in $raw.startCommits.PSObject.Properties) { $startCommits[$prop.Name] = $prop.Value }
+  }
+  return [pscustomobject]@{
+    phase        = if ($raw -and $raw.phase) { $raw.phase } else { "plan" }
+    iteration    = if ($raw) { [int]$raw.iteration } else { 0 }
+    stall        = if ($raw) { [int]$raw.stall } else { 0 }
+    startCommits = $startCommits          # repo path -> commit the build loop started from
+  }
 }
 function Set-LoopState($state) {
   $state | ConvertTo-Json -Depth 5 | Set-Content ".loop/state.json" -Encoding UTF8
 }
 
 # ---------------------------------------------------------------------------
+# Managed repos  — the set of git repos the supervisor commits/gates each build
+# iteration. Always includes the control repo (this clone, = current dir). In
+# Mode 2 it also includes every external repo listed in .loop/projects.
+#   Mode 1 (self-contained): .loop/projects empty/absent  => just the control repo.
+#   Mode 2 (external repos):  one repo path per line       => control + externals.
+# ---------------------------------------------------------------------------
+function Read-Projects {
+  # Parse .loop/projects: one repo path per line; '#' comments and blank lines ignored.
+  # Relative paths resolve against the control repo root (the current directory). The
+  # directory need not exist yet — it is created/inited at baseline.
+  $p = ".loop/projects"
+  if (-not (Test-Path $p)) { return @() }
+  $paths = @()
+  foreach ($line in Get-Content $p) {
+    $t = $line.Trim()
+    if ($t -eq '' -or $t.StartsWith('#')) { continue }
+    $full = if ([System.IO.Path]::IsPathRooted($t)) { $t } else { Join-Path (Get-Location).Path $t }
+    $paths += [System.IO.Path]::GetFullPath($full)
+  }
+  return $paths
+}
+function Get-ManagedRepos {
+  $control = [System.IO.Path]::GetFullPath((Get-Location).Path)
+  $seen  = @{}
+  $repos = @()
+  foreach ($r in @($control) + (Read-Projects)) {
+    $key = $r.ToLowerInvariant()                 # Windows paths are case-insensitive
+    if (-not $seen.ContainsKey($key)) { $seen[$key] = $true; $repos += $r }
+  }
+  return $repos
+}
+
+# ---------------------------------------------------------------------------
 # Git helpers
 # ---------------------------------------------------------------------------
 function Ensure-GitBaseline {
-  # Guarantee at least one commit exists so HEAD/diff/revert work.
-  git rev-parse HEAD *> $null
+  # Guarantee $Repo exists, is a git repo, and has at least one commit so
+  # HEAD/diff/revert work. Only ever called on repos in the managed set — never
+  # on the user's unrelated repos. Creates + inits an external project dir if the
+  # goal points at one that doesn't exist yet.
+  param([string]$Repo = ".")
+  if (-not (Test-Path $Repo)) {
+    New-Item -ItemType Directory -Force -Path $Repo | Out-Null
+    Write-Host "  created project dir: $Repo" -ForegroundColor DarkGray
+  }
+  git -C $Repo rev-parse --is-inside-work-tree *> $null
   if ($LASTEXITCODE -ne 0) {
-    git add -A *> $null
-    git commit -q -m "chore: loop-agent baseline" --allow-empty *> $null
+    git -C $Repo init *> $null
+    Write-Host "  git init: $Repo" -ForegroundColor DarkGray
+  }
+  git -C $Repo rev-parse HEAD *> $null
+  if ($LASTEXITCODE -ne 0) {
+    git -C $Repo add -A *> $null
+    git -C $Repo commit -q -m "chore: loop-agent baseline" --allow-empty *> $null
   }
 }
-function Get-Head { (git rev-parse HEAD).Trim() }
+function Get-Head { param([string]$Repo = ".") (git -C $Repo rev-parse HEAD).Trim() }
 
 # ---------------------------------------------------------------------------
 # Usage-limit parsing  — the heart of requirement #5

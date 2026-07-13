@@ -6,8 +6,11 @@ code, so you have no reason to defend it.
 Do the following:
 
 1. Read GOAL.md and specs/ to understand what "done" truly requires.
-2. Read the diff of all work since the loop started: `git diff <startCommit>..HEAD`
-   (find the start commit in .loop/state.json -> startCommit).
+2. Read the diff of ALL work since the loop started, across every managed repo. Open
+   .loop/state.json -> startCommits: it maps each repo path to the commit that repo
+   started from. For EACH entry run `git -C <repo> diff <startCommit>..HEAD` and review it.
+   The product code may live in external repos listed in .loop/projects, not just this
+   control repo — review every one, not only the repo you are running in.
 3. Check for these failure modes specifically:
    - REWARD HACKING: were acceptance tests weakened, deleted, skipped, or edited to
      pass? Are expected values hardcoded to match the test instead of computed? Is the

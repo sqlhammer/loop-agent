@@ -20,7 +20,23 @@ through subscription usage limits. This guide is only how to **use** it. To star
 - **Run inside a sandbox / container / VM / disposable copy.** The loop runs unattended
   with permissions skipped, so don't point it at anything you can't afford it to change.
 
-## 2. Set up a fresh project (edit two files)
+## 2. Pick a mode (where the code lives)
+
+The harness manages a set of git repos — always this clone (the "control repo"), plus any
+external repos you list in `.loop/projects`. That gives you two topologies:
+
+- **Mode 1 — self-contained.** Build the product **inside this clone**, next to the harness.
+  Run `pwsh -File run-loop.ps1 -Detach` **once** first: it removes the loop-agent `origin` and
+  re-roots history into a single fresh commit, so your project shares no remote or commit
+  history with the harness. Leave `.loop/projects` empty.
+- **Mode 2 — external repos.** Keep this clone as a control repo (goal, plan, specs, progress,
+  acceptance tests) and build the product in one or more **separate repos**. List each repo
+  path in `.loop/projects` (one per line; see `.loop/projects.example`). The supervisor commits
+  and gates every listed repo each iteration; your acceptance tests stay here and drive the
+  product over its real interface. The plan phase may append dirs named in `GOAL.md` — you
+  review `.loop/projects` at the approval gate.
+
+## 3. Set up a fresh project (edit two files)
 
 1. **`GOAL.md`** — replace the template with your goal. Make every acceptance criterion
    something a test can pass/fail on. State your stack. (Keep un-testable "must feel nice"
@@ -31,7 +47,7 @@ through subscription usage limits. This guide is only how to **use** it. To star
 
 That's everything you edit. Leave `run-loop.ps1` and `.loop/` alone.
 
-## 3. Run it
+## 4. Run it
 
 ```powershell
 # a) Generate the plan + acceptance tests, then it stops for your review:
@@ -49,11 +65,12 @@ Leave it running. It works one task at a time and, if it hits a usage limit, sle
 the window reopens and resumes on its own. When it prints **GOAL ACHIEVED**, do your own
 acceptance testing (the manual checklist in `GOAL.md`).
 
-## 4. The other commands
+## 5. The other commands
 
 | Command | What it does |
 |---------|--------------|
-| `pwsh -File run-loop.ps1 -Status`  | Show current phase and counters. |
+| `pwsh -File run-loop.ps1 -Detach`  | Mode 1 one-time sever: drop the loop-agent remote + re-root history. Run once on a fresh clone. |
+| `pwsh -File run-loop.ps1 -Status`  | Show current phase, counters, and the managed repos. |
 | `pwsh -File run-loop.ps1 -Replan`  | Throw away the plan/tests and regenerate from `GOAL.md`. |
 | `pwsh -File run-loop.ps1 -Approve` | Resume the build loop (also used after a stall). |
 

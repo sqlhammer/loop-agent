@@ -18,6 +18,9 @@ Follow this exactly:
    Change its checkbox to in-progress by editing the line to `- [~]`.
 
 4. Implement ONLY that one task.
+   - Product/source code belongs in the repos listed in `.loop/projects` (if it names any
+     external repos); otherwise it belongs in THIS repo. Acceptance tests always stay here in
+     the control repo. The supervisor commits every managed repo for you — never run git.
    - Stay lean: you are one task, not the whole project. Keep your context well under
      ~60% full. Spawn a subagent (Task tool) for any large exploration so its context
      is discarded when it returns.

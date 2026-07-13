@@ -1,0 +1,5 @@
+# .loop/projects — external repos the supervisor commits + gates each iteration.
+# One repo path per line ('#' comments and blanks ignored). See .loop/projects.example.
+#
+# EMPTY = Mode 1 (self-contained): the only managed repo is this clone itself.
+# Add absolute or relative repo paths below for Mode 2 (external repos).

@@ -15,6 +15,11 @@
   Return $true on success, $false on failure. Delete a check you don't have
   (e.g. no linter) by making its function `return $true`.
 
+  MODE 2 (product in an external repo listed in .loop/projects): point Build/Lint at the
+  external project (e.g. `dotnet build C:\repos\EventManager\...`), and let Invoke-Test run
+  the acceptance suite HERE in the control repo — those tests drive the running product over
+  its real interface (HTTP/CLI). MODE 1 (self-contained): everything targets this repo.
+
   Examples by stack:
     Node:    Build = 'npm run build';  Lint = 'npm run lint';  Test = 'npm test'
     Python:  Build = 'python -m compileall .'; Lint = 'ruff check .'; Test = 'pytest -q'
