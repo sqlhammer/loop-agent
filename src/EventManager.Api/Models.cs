@@ -18,4 +18,4 @@ public record BracketMatchDto(int MatchId, string MatchType, int[] CompetitorIds
 
 public record BracketDto(int Id, int EventId, BracketMatchDto[] Matches);
 
-public record GenerateBracketRequest(int EventId, int[] CompetitorIds, string MatchType);
+public record GenerateBracketRequest(int EventId);

@@ -66,12 +66,17 @@ The API speaks **snake_case** JSON (matching the GOAL's `create_competitor` exam
 - Unknown competitor id(s) → **400** with body containing `unknown competitor id`.
 
 ## Bracket generation
-`POST /generate_bracket/` accepts `{ "event_id", "competitor_ids": [...], "match_type" }`.
-It creates and persists a bracket whose `matches` partition the supplied competitors into
-per-match groupings (e.g. pairwise first-round matchups), and returns the bracket with its
-new `id`. Every supplied competitor id must appear in exactly one grouping. Every supplied
-competitor id must also already exist in the database — the endpoint never fabricates a
-bracket for ids that don't reference real competitors; it rejects the request instead.
+`POST /generate_bracket/` accepts only `{ "event_id" }`. The event, its matches, and the
+competitor pool are all looked up from the database — no competitor ids or match type are
+supplied by the caller. It creates and persists a bracket whose matches partition every
+competitor currently in the database into per-match groupings (pairwise; a trailing odd
+competitor forms a group of one), with each generated match's `match_type` taken from the
+event's own matches (cycled round-robin if there are more competitor pairs than matches).
+The endpoint refuses to create a bracket — returning 400, no bracket persisted — when any of
+the three required resources is insufficient:
+- the given `event_id` does not reference an existing event → `unknown event id`
+- the event has no matches (`matches.event_id = event_id`) → `insufficient matches`
+- fewer than 2 competitors exist in the database → `insufficient competitors`
 
 ## Verification
 `verify.ps1` drives the definition of done:

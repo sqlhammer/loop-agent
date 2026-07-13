@@ -28,45 +28,94 @@ public static class BracketEndpoints
     {
         using var conn = Open(db);
 
-        var ids = req.CompetitorIds;
+        if (!EventExists(conn, req.EventId))
+            return Results.Text("unknown event id", statusCode: 400);
 
-        if (ids.Length > 0)
-        {
-            var placeholders = string.Join(",", ids.Select((_, i) => $"@c{i}"));
-            using var check = conn.CreateCommand();
-            check.CommandText = $"SELECT COUNT(*) FROM competitors WHERE id IN ({placeholders})";
-            for (var i = 0; i < ids.Length; i++)
-                check.Parameters.AddWithValue($"@c{i}", ids[i]);
-            var found = (long)check.ExecuteScalar()!;
-            if (found < ids.Length)
-                return Results.BadRequest("unknown competitor id");
-        }
+        var matchTypes = GetMatchTypesForEvent(conn, req.EventId);
+        if (matchTypes.Count == 0)
+            return Results.Text("insufficient matches", statusCode: 400);
 
-        using var insertBracket = conn.CreateCommand();
-        insertBracket.CommandText = "INSERT INTO brackets (event_id) VALUES (@eid) RETURNING id";
-        insertBracket.Parameters.AddWithValue("@eid", req.EventId);
-        var bracketId = (int)(long)insertBracket.ExecuteScalar()!;
-        var bracketMatches = new List<BracketMatchDto>();
+        var competitorIds = GetAllCompetitorIds(conn);
+        if (competitorIds.Count < 2)
+            return Results.Text("insufficient competitors", statusCode: 400);
 
-        for (var i = 0; i < ids.Length; i += 2)
-        {
-            var group = (i + 1 < ids.Length)
-                ? new[] { ids[i], ids[i + 1] }
-                : new[] { ids[i] };
-
-            using var insertMatch = conn.CreateCommand();
-            insertMatch.CommandText =
-                "INSERT INTO bracket_matches (bracket_id, match_type, competitor_ids) " +
-                "VALUES (@bid, @mt, @cids) RETURNING id";
-            insertMatch.Parameters.AddWithValue("@bid", bracketId);
-            insertMatch.Parameters.AddWithValue("@mt", req.MatchType);
-            insertMatch.Parameters.AddWithValue("@cids", JsonSerializer.Serialize(group));
-            var matchId = (int)(long)insertMatch.ExecuteScalar()!;
-
-            bracketMatches.Add(new BracketMatchDto(matchId, req.MatchType, group));
-        }
+        var bracketId = InsertBracket(conn, req.EventId);
+        var bracketMatches = InsertBracketMatches(conn, bracketId, competitorIds, matchTypes);
 
         return Results.Ok(new BracketDto(bracketId, req.EventId, bracketMatches.ToArray()));
+    }
+
+    private static bool EventExists(SqliteConnection conn, int eventId)
+    {
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT COUNT(*) FROM events WHERE id = @id";
+        cmd.Parameters.AddWithValue("@id", eventId);
+        return (long)cmd.ExecuteScalar()! > 0;
+    }
+
+    private static List<string> GetMatchTypesForEvent(SqliteConnection conn, int eventId)
+    {
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT match_type FROM matches WHERE event_id = @id ORDER BY id";
+        cmd.Parameters.AddWithValue("@id", eventId);
+
+        var matchTypes = new List<string>();
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+            matchTypes.Add(reader.GetString(0));
+        return matchTypes;
+    }
+
+    private static List<int> GetAllCompetitorIds(SqliteConnection conn)
+    {
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT id FROM competitors ORDER BY id";
+
+        var competitorIds = new List<int>();
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+            competitorIds.Add(reader.GetInt32(0));
+        return competitorIds;
+    }
+
+    private static int InsertBracket(SqliteConnection conn, int eventId)
+    {
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "INSERT INTO brackets (event_id) VALUES (@eid) RETURNING id";
+        cmd.Parameters.AddWithValue("@eid", eventId);
+        return (int)(long)cmd.ExecuteScalar()!;
+    }
+
+    // Every competitor is placed (paired up, one leftover trio if the count is odd). Each
+    // generated bracket match takes its type from the event's own matches, cycled
+    // round-robin so bracket-match count isn't limited by how many matches were created.
+    private static List<BracketMatchDto> InsertBracketMatches(
+        SqliteConnection conn, int bracketId, List<int> competitorIds, List<string> matchTypes)
+    {
+        var bracketMatches = new List<BracketMatchDto>();
+        for (var i = 0; i < competitorIds.Count; i += 2)
+        {
+            var group = (i + 1 < competitorIds.Count)
+                ? new[] { competitorIds[i], competitorIds[i + 1] }
+                : new[] { competitorIds[i] };
+            var matchType = matchTypes[(i / 2) % matchTypes.Count];
+            var matchId = InsertBracketMatch(conn, bracketId, matchType, group);
+
+            bracketMatches.Add(new BracketMatchDto(matchId, matchType, group));
+        }
+        return bracketMatches;
+    }
+
+    private static int InsertBracketMatch(SqliteConnection conn, int bracketId, string matchType, int[] competitorIds)
+    {
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText =
+            "INSERT INTO bracket_matches (bracket_id, match_type, competitor_ids) " +
+            "VALUES (@bid, @mt, @cids) RETURNING id";
+        cmd.Parameters.AddWithValue("@bid", bracketId);
+        cmd.Parameters.AddWithValue("@mt", matchType);
+        cmd.Parameters.AddWithValue("@cids", JsonSerializer.Serialize(competitorIds));
+        return (int)(long)cmd.ExecuteScalar()!;
     }
 
     private static List<BracketDto> QueryBrackets(SqliteConnection conn, int? id)

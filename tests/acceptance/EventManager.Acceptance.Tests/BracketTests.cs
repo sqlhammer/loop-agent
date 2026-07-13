@@ -40,7 +40,8 @@ public sealed class BracketTests : ApiTestBase
 
     // GOAL crit #14: event #1 + three valid matches + eight valid unique competitors =>
     // POST /generate_bracket/ returns 200 and the bracket data along with its newly
-    // generated bracket id.
+    // generated bracket id. Revised contract: only event_id is sent; matches and
+    // competitors are looked up from the database (ASSUMPTIONS.md #10).
     [Fact]
     public async Task Generate_bracket_returns_ok_with_new_id_and_groupings()
     {
@@ -48,12 +49,12 @@ public sealed class BracketTests : ApiTestBase
         // three valid matches, as the GOAL scenario specifies
         for (var i = 0; i < 3; i++)
             Assert.Equal(HttpStatusCode.OK,
-                (await PostJson("/create_match/", $$"""{"match_type":"combat","name":"Seed {{i}}"}""")).StatusCode);
+                (await PostJson("/create_match/",
+                    $$"""{"match_type":"combat","name":"Seed {{i}}","event_id":{{eventId}}}""")).StatusCode);
 
         var competitorIds = await CreateCompetitorsAsync(8);
 
-        var resp = await PostJson("/generate_bracket/",
-            $$"""{"event_id":{{eventId}},"competitor_ids":[{{string.Join(",", competitorIds)}}],"match_type":"combat"}""");
+        var resp = await PostJson("/generate_bracket/", $$"""{"event_id":{{eventId}}}""");
 
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
         var bracket = await BodyJson(resp);
@@ -62,22 +63,50 @@ public sealed class BracketTests : ApiTestBase
         AssertBracketShape(bracket, idEl.GetInt32(), competitorIds);
     }
 
-    // ASSUMPTIONS.md #14: an empty database has no real competitors, so
-    // POST /generate_bracket/ must not fabricate a bracket from competitor ids that don't
-    // exist — it rejects with 400 instead of persisting a bracket for phantom competitors.
+    // ASSUMPTIONS.md #14: an unknown event_id must not produce a bracket.
     [Fact]
-    public async Task Generate_bracket_with_no_competitors_in_db_rejects_unknown_ids()
+    public async Task Generate_bracket_with_unknown_event_id_rejects()
     {
-        var eventId = await CreateEventAsync("Championship");
-
-        var resp = await PostJson("/generate_bracket/",
-            $$"""{"event_id":{{eventId}},"competitor_ids":[1,2,3,4,5,6,7,8],"match_type":"combat"}""");
+        var resp = await PostJson("/generate_bracket/", """{"event_id":999}""");
 
         Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
-        var body = await BodyText(resp);
-        Assert.Contains("unknown competitor id", body);
+        Assert.Contains("unknown event id", await BodyText(resp));
 
-        // No phantom bracket should have been persisted.
+        var brackets = await BodyJson(await Client.GetAsync("/bracket/"));
+        Assert.Equal(0, brackets.GetArrayLength());
+    }
+
+    // ASSUMPTIONS.md #14: an event with no matches must not produce a bracket, even if
+    // competitors exist.
+    [Fact]
+    public async Task Generate_bracket_with_no_matches_for_event_rejects()
+    {
+        var eventId = await CreateEventAsync("Championship");
+        await CreateCompetitorsAsync(8);
+
+        var resp = await PostJson("/generate_bracket/", $$"""{"event_id":{{eventId}}}""");
+
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+        Assert.Contains("insufficient matches", await BodyText(resp));
+
+        var brackets = await BodyJson(await Client.GetAsync("/bracket/"));
+        Assert.Equal(0, brackets.GetArrayLength());
+    }
+
+    // ASSUMPTIONS.md #14: fewer than 2 competitors in the database must not produce a
+    // bracket, even if the event and its matches exist.
+    [Fact]
+    public async Task Generate_bracket_with_insufficient_competitors_rejects()
+    {
+        var eventId = await CreateEventAsync("Championship");
+        Assert.Equal(HttpStatusCode.OK,
+            (await PostJson("/create_match/", $$"""{"match_type":"combat","name":"Seed","event_id":{{eventId}}}""")).StatusCode);
+
+        var resp = await PostJson("/generate_bracket/", $$"""{"event_id":{{eventId}}}""");
+
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+        Assert.Contains("insufficient competitors", await BodyText(resp));
+
         var brackets = await BodyJson(await Client.GetAsync("/bracket/"));
         Assert.Equal(0, brackets.GetArrayLength());
     }
@@ -111,10 +140,11 @@ public sealed class BracketTests : ApiTestBase
     private async Task<(int bracketId, List<int> competitorIds)> SeedBracketAsync()
     {
         var eventId = await CreateEventAsync("Seeded Event");
+        Assert.Equal(HttpStatusCode.OK,
+            (await PostJson("/create_match/", $$"""{"match_type":"combat","name":"Seed","event_id":{{eventId}}}""")).StatusCode);
         var competitorIds = await CreateCompetitorsAsync(8);
 
-        var resp = await PostJson("/generate_bracket/",
-            $$"""{"event_id":{{eventId}},"competitor_ids":[{{string.Join(",", competitorIds)}}],"match_type":"combat"}""");
+        var resp = await PostJson("/generate_bracket/", $$"""{"event_id":{{eventId}}}""");
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
         var bracketId = (await BodyJson(resp)).GetProperty("id").GetInt32();
         return (bracketId, competitorIds);

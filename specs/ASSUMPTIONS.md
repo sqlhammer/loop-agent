@@ -40,12 +40,15 @@ encodes the corresponding decision.
    `BJJ`) → 400 `invalid match type`. Comparison is treated as case-sensitive against the
    whitelist as written.
 
-10. **`generate_bracket` input.** It accepts `event_id`, an explicit `competitor_ids` list,
-    and a `match_type`, and produces bracket matches that partition those competitors into
-    per-match groupings. The "three valid matches" in criterion 14's GIVEN describe pre-
-    existing DB state; the bracket generates its own matches from the supplied competitors.
-    The test asserts every supplied competitor appears in some grouping (encoding "groupings
-    of competitors per match") without pinning a specific bracket algorithm.
+10. **`generate_bracket` input (revised).** It accepts only `event_id`; competitors and
+    matches are looked up from the database rather than supplied by the caller. Every
+    competitor currently in the database is placed into the bracket (paired up; a trailing
+    odd competitor forms a group of one). Each generated match's `match_type` is taken from
+    the event's own `matches` rows (cycled round-robin), so "three valid matches" in
+    criterion 14's GIVEN state supplies the match types available to the bracket, not a cap
+    on how many bracket matches are produced. The test asserts every competitor in the
+    database appears in some grouping (encoding "groupings of competitors per match")
+    without pinning a specific pairing algorithm.
 
 11. **Criterion 16 is the aggregate gate.** "`verify.ps1 -Accept` exits 0" is satisfied by
     definition when build + lint + all other tests are green; it is not a self-referential
@@ -60,10 +63,11 @@ encodes the corresponding decision.
 13. **Response status is 200 (not 201) for creates**, exactly as the GOAL criteria state
     ("returns 200 and the ... id").
 
-14. **`generate_bracket` rejects unknown competitor ids.** GOAL crit #14 only covers the
-    happy path (competitors that already exist). On an empty database — or any request
-    whose `competitor_ids` include an id with no matching competitor row — the endpoint
-    cannot legitimately group a competitor it has no record of, so it must not fabricate a
-    bracket from those ids. `POST /generate_bracket/` validates every id against the
-    `competitors` table first and returns **400** with body containing
-    `unknown competitor id` when any is missing, persisting no bracket or match rows.
+14. **`generate_bracket` rejects insufficient resources (revised).** GOAL crit #14 only
+    covers the happy path (an event with matches and competitors already in the database).
+    Since the request no longer supplies competitor ids or a match type, the endpoint must
+    instead validate the three resources it looks up itself before creating anything,
+    persisting no bracket or match rows on failure: `event_id` must reference an existing
+    event (400 `unknown event id`), the event must have at least one match (400
+    `insufficient matches`), and the database must have at least 2 competitors (400
+    `insufficient competitors`).
