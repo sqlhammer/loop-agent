@@ -3,6 +3,7 @@
 # Contains no framework logic: it just forwards every argument to run-loop.ps1
 # via pwsh. Windows users can keep calling `pwsh -File run-loop.ps1` directly.
 #
+#   ./run-loop.sh -Detach      # run once: detached git from the root loop
 #   ./run-loop.sh              # first run: plan + acceptance tests, then stops
 #   ./run-loop.sh -Approve     # start the unattended build loop
 #   ./run-loop.sh -Status      # print phase/counters
