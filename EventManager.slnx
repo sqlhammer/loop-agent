@@ -1,4 +1,0 @@
-<Solution>
-  <Project Path="src/EventManager.Api/EventManager.Api.csproj" />
-  <Project Path="tests/acceptance/EventManager.Acceptance.Tests/EventManager.Acceptance.Tests.csproj" />
-</Solution>
